@@ -1,0 +1,131 @@
+/* AdminPage.css */
+
+.admin-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background-color: #f5f6fa;
+  min-height: 100vh;
+}
+
+.admin-container h1 {
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 30px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #3498db;
+}
+
+.admin-layout {
+  display: flex;
+  gap: 20px;
+}
+
+.admin-sidebar {
+  width: 250px;
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-section {
+  margin-bottom: 20px;
+}
+
+.sidebar-section h3 {
+  color: #34495e;
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  padding-left: 5px;
+  border-left: 3px solid #3498db;
+}
+
+.sidebar-button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.sidebar-button:hover {
+  background-color: #2980b9;
+}
+
+.admin-content {
+  flex: 1;
+  background-color: #e8f5e9; /* Light green background */
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.admin-section {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+/* Access denied styling */
+.access-denied {
+  text-align: center;
+  padding: 50px 20px;
+}
+
+.access-denied h1 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+}
+
+.access-denied p {
+  color: #a94442;
+  background-color: #f2dede;
+  padding: 15px;
+  border-radius: 5px;
+  display: inline-block;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .admin-layout {
+    flex-direction: column;
+  }
+
+  .admin-sidebar {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+
+  .admin-container {
+    padding: 15px;
+  }
+
+  .admin-container h1 {
+    font-size: 1.8rem;
+  }
+
+  .sidebar-section h3 {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-container h1 {
+    font-size: 1.5rem;
+  }
+
+  .sidebar-section h3 {
+    font-size: 1rem;
+  }
+
+  .access-denied {
+    padding: 30px 10px;
+  }
+}

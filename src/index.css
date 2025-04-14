@@ -1,0 +1,25 @@
+nav {
+  background-color: #222121;
+  padding: 10px;
+  color: rgb(243, 231, 231);
+}
+
+ul {
+  display: flex;
+  justify-content: left;
+  margin: 0;
+  padding: 0;
+}
+
+li {
+  margin-right: 25px;
+}
+
+li a {
+  color: rgb(235, 231, 231);
+  text-decoration: none;
+}
+
+li a:hover {
+  text-decoration: underline;
+}

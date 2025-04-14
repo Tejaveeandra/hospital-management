@@ -1,0 +1,46 @@
+/* Navigation.css */
+.navigation {
+  background-color: #333; /* Dark background for the navbar */
+  padding: 10px 20px; /* Padding around the navbar */
+}
+
+.nav-links {
+  list-style-type: none;
+  display: flex;
+  justify-content: left; /* Center the links horizontally */
+  margin: 0;
+  padding: 0;
+}
+
+.nav-item {
+  margin: 0 15px; /* Space between the navigation links */
+}
+
+.nav-link {
+  color: white; /* White text color */
+  font-size: 16px;
+  text-decoration: none; /* Remove underline */
+  padding: 5px 10px; /* Add padding to the links */
+  border-radius: 4px; /* Rounded corners for the links */
+  transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+}
+
+.nav-link:hover {
+  background-color: #555; /* Darker background on hover */
+  color: #fff; /* Keep text color white when hovering */
+}
+
+.nav-link:active {
+  background-color: #444; /* Dark background when link is clicked */
+}
+
+/* Style for the active page (e.g., "Admin Page") with higher specificity */
+.navigation .nav-links .nav-item.active-page .nav-link {
+  background-color: #000 !important; /* Black background with !important to override */
+  color: #fff !important; /* White text for contrast */
+}
+
+/* Ensure active state doesn't override the black background */
+.navigation .nav-links .nav-item.active-page .nav-link:active {
+  background-color: #000 !important; /* Keep black on click */
+}

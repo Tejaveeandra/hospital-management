@@ -1,0 +1,110 @@
+.leave-management {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #f9f9f9;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.form-container,
+.all-leaves-container {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+}
+
+h3 {
+  margin-bottom: 1rem;
+  color: #333;
+  text-align: center;
+}
+
+label {
+  display: block;
+  margin-top: 1rem;
+  font-weight: 500;
+  color: #444;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  margin-top: 0.3rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+input:focus,
+select:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+button {
+  margin-top: 1.2rem;
+  padding: 0.6rem 1.5rem;
+  background-color: #007bff;
+  color: white;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover:enabled {
+  background-color: #0056b3;
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.message {
+  margin-bottom: 1rem;
+  padding: 0.8rem;
+  background-color: #e8f0fe;
+  border-left: 5px solid #007bff;
+  color: #333;
+  border-radius: 6px;
+}
+
+.loading {
+  margin-bottom: 1rem;
+  color: #ff6f00;
+  font-weight: bold;
+  text-align: center;
+}
+
+.leaves-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.leaves-table th,
+.leaves-table td {
+  padding: 0.75rem 1rem;
+  text-align: center;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.leaves-table th {
+  background-color: #f0f2f5;
+  color: #333;
+  font-weight: 600;
+}
+
+.leaves-table tr:hover {
+  background-color: #f5faff;
+}
