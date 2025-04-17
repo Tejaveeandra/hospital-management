@@ -13,8 +13,7 @@ const App = () => {
       <div>
         <Navbar /> {/* Include the Navbar here */}
 
-       
-
+        
       
         <Routes>
          

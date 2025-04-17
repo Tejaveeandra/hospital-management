@@ -1,185 +1,256 @@
-/* DoctorPage.css - Consistent with AdminPage.css */
+/* Reset default body margin */
+body {
+  margin: 0;
+  height: 100vh;
+  overflow-y: hidden; /* ❌ Disable vertical scrolling */
+}
 
+/* Main container for the doctor page */
 .doctor-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    font-family: Arial, sans-serif;
-    background-color: #f5f6fa;
-    min-height: 100vh;
-  }
-  
-  .doctor-container h1 {
-    color: #2c3e50;
-    text-align: center;
-    margin-bottom: 30px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #3498db;
-  }
-  
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background-color: #f5f6fa;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* ❌ Freeze content within container */
+}
+
+/* Header styling */
+.doctor-container h1,
+.doctor-container h2 {
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 30px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #3498db;
+  flex-shrink: 0;
+}
+
+/* Layout wrapper */
+.doctor-layout {
+  display: flex;
+  gap: 20px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden; /* ❌ Prevent layout scrolling */
+}
+
+/* Sidebar */
+.doctor-sidebar {
+  width: 250px;
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden; /* ❌ Disable sidebar scrolling */
+}
+
+/* Sidebar section */
+.sidebar-section {
+  margin-bottom: 20px;
+}
+
+.sidebar-section h3 {
+  color: #34495e;
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  padding-left: 5px;
+  border-left: 3px solid #3498db;
+}
+
+.sidebar-button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.sidebar-button:hover {
+  background-color: #2980b9;
+}
+
+/* Content panel */
+.doctor-content {
+  flex: 1;
+  background-color: #e8f5e9;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden; /* ❌ Disable content scrolling */
+}
+
+.full-width-content {
+  width: 100%;
+}
+
+.doctor-section {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+/* Form fields */
+.form-group {
+  margin-bottom: 20px;
+}
+
+label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 8px;
+  color: #2c3e50;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="email"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+input:disabled {
+  background-color: #f0f0f0;
+}
+
+.fetch-button {
+  width: 100%;
+  padding: 12px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.fetch-button:hover {
+  background-color: #2980b9;
+}
+
+.fetch-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Access denied section */
+.access-denied {
+  text-align: center;
+  padding: 50px 20px;
+}
+
+.access-denied h1 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+}
+
+.access-denied p {
+  color: #a94442;
+  background-color: #f2dede;
+  padding: 15px;
+  border-radius: 5px;
+  display: inline-block;
+}
+
+/* Table styling */
+table,
+th,
+td {
+  border: 1px solid black;
+  border-collapse: collapse;
+  padding: 8px;
+  text-align: center;
+}
+
+th {
+  color: blue;
+  cursor: pointer;
+  background-color: #f0f2f5;
+}
+
+tr:hover {
+  background-color: #f5faff;
+}
+
+/* Pagination controls */
+.pagination-controls {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Messages */
+.loading-message {
+  color: #ff6f00;
+  font-weight: bold;
+  text-align: center;
+}
+
+.status-message {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #e8f0fe;
+  border-left: 5px solid #3498db;
+  color: #333;
+  border-radius: 5px;
+}
+
+.doctor-id-display {
+  margin-bottom: 20px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
   .doctor-layout {
-    display: flex;
-    gap: 20px;
+    flex-direction: column;
   }
-  
+
   .doctor-sidebar {
-    width: 250px;
-    background-color: #ffffff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  .sidebar-section {
+    width: 100%;
     margin-bottom: 20px;
   }
-  
-  .sidebar-section h3 {
-    color: #34495e;
-    font-size: 1.2rem;
-    margin-bottom: 10px;
-    padding-left: 5px;
-    border-left: 3px solid #3498db;
-  }
-  
-  .sidebar-button {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    background-color: #3498db;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-  
-  .sidebar-button:hover {
-    background-color: #2980b9;
-  }
-  
+
   .doctor-content {
-    flex: 1;
-    background-color: #e8f5e9; /* Light green like Admin Page */
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-height: none;
   }
-  
-  .doctor-section {
-    background-color: #ffffff;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-  }
-  
-  /* Form styling */
-  .form-group {
-    margin-bottom: 20px;
-  }
-  
-  label {
-    font-weight: bold;
-    display: block;
-    margin-bottom: 8px;
-    color: #2c3e50;
-  }
-  
-  input[type="text"],
-  input[type="number"],
-  input[type="email"] {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-  }
-  
-  /* Submit/Action button */
-  .fetch-button {
-    width: 100%;
-    padding: 12px;
-    background-color: #3498db;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
-  .fetch-button:hover {
-    background-color: #2980b9;
-  }
-  
-  /* Access denied styling (if needed) */
-  .access-denied {
-    text-align: center;
-    padding: 50px 20px;
-  }
-  
-  .access-denied h1 {
-    color: #2c3e50;
-    margin-bottom: 20px;
-  }
-  
-  .access-denied p {
-    color: #a94442;
-    background-color: #f2dede;
+
+  .doctor-container {
     padding: 15px;
-    border-radius: 5px;
-    display: inline-block;
   }
-  
-  /* Responsive design */
-  @media (max-width: 768px) {
-    .doctor-layout {
-      flex-direction: column;
-    }
-  
-    .doctor-sidebar {
-      width: 100%;
-      margin-bottom: 20px;
-    }
-  
-    .doctor-container {
-      padding: 15px;
-    }
-  
-    .doctor-container h1 {
-      font-size: 1.8rem;
-    }
-  
-    .sidebar-section h3 {
-      font-size: 1.1rem;
-    }
+
+  .doctor-container h1 {
+    font-size: 1.8rem;
   }
-  
-  @media (max-width: 480px) {
-    .doctor-container h1 {
-      font-size: 1.5rem;
-    }
-  
-    .sidebar-section h3 {
-      font-size: 1rem;
-    }
-  
-    .access-denied {
-      padding: 30px 10px;
-    }
+
+  .sidebar-section h3 {
+    font-size: 1.1rem;
   }
-  table, th, td {
-    border: 1px solid black;
-    border-collapse: collapse;
-    padding: 8px;
-    text-align: center;
+}
+
+@media (max-width: 480px) {
+  .doctor-container h1 {
+    font-size: 1.5rem;
   }
-  th {
-    color: blue;
-    cursor: pointer; /* Optional: shows hand cursor on hover */
+
+  .sidebar-section h3 {
+    font-size: 1rem;
   }
-  
-  th:hover {
-    color: black;
+
+  .access-denied {
+    padding: 30px 10px;
   }
-  
+}

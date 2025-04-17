@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import LeaveManagement, { LeaveOperation } from "./DoctorLeavePage";
+import AppointmentManagement, { AppointmentOperation } from "./AppointmentPage";
 import "./DoctorPage.css";
 
 // Define interfaces
@@ -75,11 +76,23 @@ const DoctorContent: React.FC<DoctorContentProps> = React.memo(({
     leaveOperations.push("View Leave by Doctor ID");
   }
 
+  // Map DoctorPage operationMode to AppointmentManagement operationMode
+  const appointmentOperationMap: Record<string, AppointmentOperation> = {
+    appointmentViewById: "View Appointment by ID",
+    appointmentUpdate: "Update Appointment",
+    appointmentReschedule: "Reschedule Appointment",
+    appointmentCancel: "Cancel Appointment",
+    appointmentViewByDoctorDate: "View Appointments by Doctor and Date",
+    appointmentCountByDoctorDate: "Get Appointment Count by Doctor and Date",
+  };
+
+  const currentAppointmentOperation = appointmentOperationMap[operationMode] || "View Appointment by ID";
+
   return (
     <div className="right-panel">
       {loading && <p className="loading-message">Loading...</p>}
 
-      {operationMode && operationMode !== "viewAll" && operationMode !== "createLeave" && operationMode !== "viewLeaveByDoctorId" && (
+      {operationMode && operationMode !== "viewAll" && operationMode !== "createLeave" && operationMode !== "viewLeaveByDoctorId" && !Object.keys(appointmentOperationMap).includes(operationMode) && (
         <div className="operation-content">
           <h2>
             {operationMode === "create" && createdDoctor ? "Created Doctor Details" :
@@ -217,13 +230,35 @@ const DoctorContent: React.FC<DoctorContentProps> = React.memo(({
         </div>
       )}
 
+      {[
+        "appointmentViewById",
+        "appointmentUpdate",
+        "appointmentReschedule",
+        "appointmentCancel",
+        "appointmentViewByDoctorDate",
+        "appointmentCountByDoctorDate",
+      ].includes(operationMode) && (
+        <AppointmentManagement
+          allowedOperations={[
+            "View Appointment by ID",
+            "Update Appointment",
+            "Reschedule Appointment",
+            "Cancel Appointment",
+            "View Appointments by Doctor and Date",
+            "Get Appointment Count by Doctor and Date",
+          ]}
+          doctorId={doctorId?.toString() || ""}
+          operationMode={currentAppointmentOperation} // Pass the mapped operation mode
+        />
+      )}
+
       {message && <p className="status-message">{message}</p>}
     </div>
   );
 });
 
 // DoctorPage component
-const DoctorPage: React.FC<DoctorPageProps> = ({ allowedOperations = ["create", "getById", "update", "viewAll", "delete", "createLeave", "viewLeaveByDoctorId"], initialOperation, showHeaders = true }) => {
+const DoctorPage: React.FC<DoctorPageProps> = ({ allowedOperations = ["create", "getById", "update", "viewAll", "delete", "createLeave", "viewLeaveByDoctorId", "appointmentViewById", "appointmentUpdate", "appointmentReschedule", "appointmentCancel", "appointmentViewByDoctorDate", "appointmentCountByDoctorDate"], initialOperation, showHeaders = true }) => {
   const [operationMode, setOperationMode] = useState<string>(initialOperation || "");
   const [doctorId, setDoctorId] = useState<number | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -455,6 +490,37 @@ const DoctorPage: React.FC<DoctorPageProps> = ({ allowedOperations = ["create", 
               {allowedOperations.includes("viewLeaveByDoctorId") && (
                 <button onClick={() => handleOperation("viewLeaveByDoctorId")} disabled={loading}>
                   View Leave by Doctor ID
+                </button>
+              )}
+              <h3>Appointment Operations</h3>
+              {allowedOperations.includes("appointmentViewById") && (
+                <button onClick={() => handleOperation("appointmentViewById")} disabled={loading}>
+                  View Appointment by ID
+                </button>
+              )}
+              {allowedOperations.includes("appointmentUpdate") && (
+                <button onClick={() => handleOperation("appointmentUpdate")} disabled={loading}>
+                  Update Appointment
+                </button>
+              )}
+              {allowedOperations.includes("appointmentReschedule") && (
+                <button onClick={() => handleOperation("appointmentReschedule")} disabled={loading}>
+                  Reschedule Appointment
+                </button>
+              )}
+              {allowedOperations.includes("appointmentCancel") && (
+                <button onClick={() => handleOperation("appointmentCancel")} disabled={loading}>
+                  Cancel Appointment
+                </button>
+              )}
+              {allowedOperations.includes("appointmentViewByDoctorDate") && (
+                <button onClick={() => handleOperation("appointmentViewByDoctorDate")} disabled={loading}>
+                  View Appointments by Doctor and Date
+                </button>
+              )}
+              {allowedOperations.includes("appointmentCountByDoctorDate") && (
+                <button onClick={() => handleOperation("appointmentCountByDoctorDate")} disabled={loading}>
+                  Get Appointment Count by Doctor and Date
                 </button>
               )}
             </div>

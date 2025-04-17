@@ -1,35 +1,54 @@
 /* AdminPage.css */
 
+/* Allow page to scroll normally */
+body {
+  margin: 0;
+  height: auto;
+  overflow-y: auto;
+}
+
+/* Main container for the admin page */
 .admin-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
   font-family: Arial, sans-serif;
   background-color: #f5f6fa;
-  min-height: 100vh;
+  min-height: 100vh; /* Ensures it covers full viewport if content is short */
+  display: flex;
+  flex-direction: column;
 }
 
+/* Header styling */
 .admin-container h1 {
   color: #2c3e50;
   text-align: center;
   margin-bottom: 30px;
   padding-bottom: 10px;
   border-bottom: 2px solid #3498db;
+  flex-shrink: 0;
 }
 
+/* Layout wrapper */
 .admin-layout {
   display: flex;
   gap: 20px;
+  flex: 1;
+  flex-wrap: wrap; /* allow wrapping on smaller screens */
 }
 
+/* Sidebar */
 .admin-sidebar {
   width: 250px;
   background-color: #ffffff;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  max-height: 100%;
 }
 
+/* Sidebar section */
 .sidebar-section {
   margin-bottom: 20px;
 }
@@ -59,21 +78,24 @@
   background-color: #2980b9;
 }
 
+/* Content panel */
 .admin-content {
   flex: 1;
-  background-color: #e8f5e9; /* Light green background */
+  background-color: #e8f5e9;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
 }
 
+/* Section */
 .admin-section {
   background-color: #ffffff;
   border-radius: 8px;
   padding: 20px;
 }
 
-/* Access denied styling */
+/* Access denied */
 .access-denied {
   text-align: center;
   padding: 50px 20px;
@@ -92,7 +114,7 @@
   display: inline-block;
 }
 
-/* Responsive design */
+/* Responsive */
 @media (max-width: 768px) {
   .admin-layout {
     flex-direction: column;
@@ -101,6 +123,10 @@
   .admin-sidebar {
     width: 100%;
     margin-bottom: 20px;
+  }
+
+  .admin-content {
+    max-height: none;
   }
 
   .admin-container {
