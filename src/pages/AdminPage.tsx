@@ -36,7 +36,7 @@ const AdminPage = () => {
         <p>Access Denied: You do not have permission to view this page.</p>
       </div>
     );
-  }
+   }
 
   return (
     <div className="admin-container">

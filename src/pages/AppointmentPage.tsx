@@ -482,7 +482,7 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
               <input type="text" value={createdAppointment.timeSlot} disabled />
               <label>Emergency:</label>
               <input type="text" value={createdAppointment.isEmergency ? "Yes" : "No"} disabled />
-              <label>Preferred Doctor:</label>
+              {/* <label>Preferred Doctor:</label> */}
               {/* <input type="text" value={createdAppointment.isPreferredDoctor ? "Yes" : "No"} disabled /> */}
               <button onClick={resetForm} disabled={loading}>Create New Appointment</button>
             </div>

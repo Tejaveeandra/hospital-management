@@ -102,7 +102,7 @@ const DoctorContent: React.FC<DoctorContentProps> = React.memo(({
             operationMode === "delete" ? "Delete Doctor" : "Doctor Details"}
           </h2>
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             {(operationMode === "getById" || operationMode === "delete") && (
               <>
                 <label>Doctor ID:</label>
@@ -248,7 +248,7 @@ const DoctorContent: React.FC<DoctorContentProps> = React.memo(({
             "Get Appointment Count by Doctor and Date",
           ]}
           doctorId={doctorId?.toString() || ""}
-          operationMode={currentAppointmentOperation} // Pass the mapped operation mode
+          operationMode={currentAppointmentOperation}
         />
       )}
 
@@ -444,7 +444,7 @@ const DoctorPage: React.FC<DoctorPageProps> = ({ allowedOperations = ["create", 
   }, [initialOperation, fetchAllDoctors]);
 
   return (
-    <div className="doctor-container">
+    <div className="doctor-container" style={{ flexGrow: 1 }}>
       {showHeaders && (
         <>
           <h1>WELCOME TO THE HOSPITAL MANAGEMENT SYSTEM</h1>
@@ -452,7 +452,7 @@ const DoctorPage: React.FC<DoctorPageProps> = ({ allowedOperations = ["create", 
         </>
       )}
       {!initialOperation ? (
-        <div className="split-container">
+        <div className="split-container" style={{ flex: 1, display: "flex" }}>
           <div className="left-panel">
             <div className="doctor-action-buttons">
               <h3>Doctor Operations</h3>
@@ -547,7 +547,7 @@ const DoctorPage: React.FC<DoctorPageProps> = ({ allowedOperations = ["create", 
           />
         </div>
       ) : (
-        <div className="right-panel full-width-content">
+        <div className="right-panel full-width-content" style={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <DoctorContent
             operationMode={operationMode}
             doctorId={doctorId}
