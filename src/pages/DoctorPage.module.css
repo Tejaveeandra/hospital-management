@@ -1,20 +1,14 @@
-/* Reset default body margin */
-body {
-  margin: 0;
-  height: 100vh;
-  overflow-y: hidden; /* ❌ Disable vertical scrolling */
-}
+/* Removed global body styles */
 
 /* Main container for the doctor page */
 .doctor-container {
-  max-width: 1200px;
-  margin: 20px auto;
+
   padding: 20px;
   font-family: Arial, sans-serif;
   background-color: #f5f6fa;
   display: flex;
   flex-direction: column;
-  
+
 }
 
 /* Header styling */
@@ -34,7 +28,8 @@ body {
   gap: 20px;
   flex: 1;
   min-height: 0;
-  overflow: hidden; /* ❌ Prevent layout scrolling */
+  min-height: 0;
+  overflow: visible;
 }
 
 /* Sidebar */
@@ -44,7 +39,7 @@ body {
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  overflow: hidden; /* ❌ Disable sidebar scrolling */
+  overflow: visible;
 }
 
 /* Sidebar section */
@@ -84,9 +79,9 @@ body {
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  overflow: hidden; /* ❌ Disable content scrolling */
-  padding-bottom: 0; /* Remove padding at the bottom */
-  margin-bottom: 0; /* Remove margin at the bottom */
+  overflow: visible;
+  padding-bottom: 0;
+  margin-bottom: 0;
 }
 
 .right-panel {
@@ -95,7 +90,8 @@ body {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  min-height: 0; /* Prevents unwanted growth */
+  min-height: 0;
+  /* Prevents unwanted growth */
 }
 
 .full-width-content {
@@ -106,7 +102,8 @@ body {
   background-color: #ffffff;
   border-radius: 8px;
   padding: 20px;
-  margin-bottom: 0; /* Remove margin to eliminate space */
+  margin-bottom: 0;
+  /* Remove margin to eliminate space */
 }
 
 .doctor-section form {
@@ -114,11 +111,13 @@ body {
   padding-bottom: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px; /* Optional: Adds spacing between form elements without extra space */
+  gap: 10px;
+  /* Optional: Adds spacing between form elements without extra space */
 }
 
 .doctor-action-buttons {
-  margin-top: 10px; /* Ensures the button is snug with the form fields */
+  margin-top: 10px;
+  /* Ensures the button is snug with the form fields */
 }
 
 /* Form fields */
@@ -133,16 +132,16 @@ label {
   color: #2c3e50;
 }
 
-input[type="text"],
-input[type="number"],
-input[type="email"] {
-  width: 100%;
+.doctor-container input[type="text"],
+.doctor-container input[type="number"],
+.doctor-container input[type="email"] {
+
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
 }
 
-input:disabled {
+.doctor-container input:disabled {
   background-color: #f0f0f0;
 }
 
@@ -187,22 +186,22 @@ input:disabled {
 }
 
 /* Table styling */
-table,
-th,
-td {
+.doctor-container table,
+.doctor-container th,
+.doctor-container td {
   border: 1px solid black;
   border-collapse: collapse;
   padding: 8px;
   text-align: center;
 }
 
-th {
+.doctor-container th {
   color: blue;
   cursor: pointer;
   background-color: #f0f2f5;
 }
 
-tr:hover {
+.doctor-container tr:hover {
   background-color: #f5faff;
 }
 
@@ -277,4 +276,43 @@ tr:hover {
   .access-denied {
     padding: 30px 10px;
   }
+}
+
+/* Added for Split Layout */
+.split-container {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  width: 100%;
+  overflow: visible;
+}
+
+.left-panel {
+  width: 15vw;
+
+
+  background-color: #ffffff;
+  padding: 20px;
+  padding: 20px;
+  overflow-y: visible;
+  border-right: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure right panel takes remaining space if not already defined to flex properly */
+.right-panel {
+  width: 85vw;
+
+  overflow-y: visible;
+  padding: 20px;
+  background-color: #ffffff;
+  /* Optional: Add some spacing from the sidebar */
+}
+
+/* Override for Admin View (Embedded) */
+.admin-view .right-panel {
+  width: 100%;
+  flex: 1;
+  padding: 0;
 }

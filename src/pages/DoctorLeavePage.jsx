@@ -1,45 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "./DoctorLeavePage.css";
+import api from "../api/api";
+import styles from "./DoctorLeavePage.module.css";
 
-// Define interfaces
-interface DoctorLeave {
-  leaveId: number;
-  doctorId: number;
-  startDate: string;
-  endDate: string;
-  leaveType: "FULL_DAY" | "HALF_DAY";
-  status: "APPROVED" | "REJECTED" | "PENDING";
-  startTime?: string; // Optional field for half-day leaves
-  endTime?: string;   // Optional field for half-day leaves
-}
-
-export type LeaveOperation =
-  | "Create Leave"
-  | "View Leave by Doctor ID"
-  | "View All Leaves"
-  | "View Pending Leaves"
-  | "Update Leave Status"
-  | "Delete Leave";
-
-interface LeaveManagementProps {
-  allowedOperations: LeaveOperation[];
-  doctorId?: string;
-}
-
-// Define form data interface
-interface LeaveFormData {
-  doctorId: string;
-  startDate: string;
-  endDate: string;
-  leaveType: "FULL_DAY" | "HALF_DAY";
-  startTime: string;
-  endTime: string;
-}
-
-const LeaveManagement: React.FC<LeaveManagementProps> = ({ allowedOperations, doctorId }) => {
-  const [operationMode, setOperationMode] = useState<LeaveOperation | null>(null);
-  const [formData, setFormData] = useState<LeaveFormData>({
+const LeaveManagement = ({ allowedOperations, doctorId, isEmbedded = false }) => {
+  const [operationMode, setOperationMode] = useState(null);
+  const [formData, setFormData] = useState({
     doctorId: doctorId || "",
     startDate: new Date().toISOString().split("T")[0],
     endDate: new Date().toISOString().split("T")[0],
@@ -47,11 +13,11 @@ const LeaveManagement: React.FC<LeaveManagementProps> = ({ allowedOperations, do
     startTime: "",
     endTime: "",
   });
-  const [viewDoctorId, setViewDoctorId] = useState<string>(doctorId || "");
-  const [leaveId, setLeaveId] = useState<string>("");
-  const [message, setMessage] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [leaves, setLeaves] = useState<DoctorLeave[]>([]);
+  const [viewDoctorId, setViewDoctorId] = useState(doctorId || "");
+  const [leaveId, setLeaveId] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [leaves, setLeaves] = useState([]);
 
   useEffect(() => {
     if (allowedOperations.length > 0) {
@@ -72,7 +38,7 @@ const LeaveManagement: React.FC<LeaveManagementProps> = ({ allowedOperations, do
     }
   }, [operationMode]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
     console.log(`Changing ${name} to ${value}`); // Debug log
     setFormData((prev) => ({
@@ -81,7 +47,7 @@ const LeaveManagement: React.FC<LeaveManagementProps> = ({ allowedOperations, do
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.doctorId || isNaN(Number(formData.doctorId))) {
       setMessage("Please enter a valid Doctor ID.");
@@ -106,7 +72,7 @@ const LeaveManagement: React.FC<LeaveManagementProps> = ({ allowedOperations, do
         endTime: formData.leaveType === "HALF_DAY" ? formData.endTime : undefined,
       };
       console.log("Submitting payload:", payload); // Debug log
-      const response = await axios.post<DoctorLeave>("http://localhost:8081/api/doctor-leaves/addLeave", payload);
+      const response = await api.post("/doctor-leaves/addLeave", payload);
       setMessage(`Leave created: ID ${response.data.leaveId}`);
       setFormData({
         doctorId: doctorId || "",
@@ -132,7 +98,7 @@ const LeaveManagement: React.FC<LeaveManagementProps> = ({ allowedOperations, do
     }
     setLoading(true);
     try {
-      const response = await axios.get<DoctorLeave[]>(`http://localhost:8081/api/doctor-leaves/doctorLeave/${viewDoctorId}`);
+      const response = await api.get(`/doctor-leaves/doctorLeave/${viewDoctorId}`);
       setLeaves(response.data);
       setMessage(`Leaves for Doctor ID: ${viewDoctorId}`);
     } catch (error) {
@@ -145,7 +111,7 @@ const LeaveManagement: React.FC<LeaveManagementProps> = ({ allowedOperations, do
   const fetchAllLeaves = async () => {
     setLoading(true);
     try {
-      const response = await axios.get<DoctorLeave[]>("http://localhost:8081/api/doctor-leaves");
+      const response = await api.get("/doctor-leaves");
       setLeaves(response.data);
       setMessage("All leaves fetched.");
     } catch (error) {
@@ -158,7 +124,7 @@ const LeaveManagement: React.FC<LeaveManagementProps> = ({ allowedOperations, do
   const fetchPendingLeaves = async () => {
     setLoading(true);
     try {
-      const response = await axios.get<DoctorLeave[]>("http://localhost:8081/api/doctor-leaves/doctor-leave/pending");
+      const response = await api.get("/doctor-leaves/doctor-leave/pending");
       setLeaves(response.data);
       setMessage("Pending leaves fetched.");
     } catch (error) {
@@ -168,14 +134,14 @@ const LeaveManagement: React.FC<LeaveManagementProps> = ({ allowedOperations, do
     }
   };
 
-  const updateLeaveStatus = async (status: string) => {
+  const updateLeaveStatus = async (status) => {
     if (!leaveId) {
       setMessage("Please enter a Leave ID.");
       return;
     }
     setLoading(true);
     try {
-      await axios.put(`http://localhost:8081/api/doctor-leaves/doctor-leave/${leaveId}/status`, null, {
+      await api.put(`/doctor-leaves/doctor-leave/${leaveId}/status`, null, {
         params: { status },
       });
       setMessage(`Leave ID ${leaveId} updated to ${status}`);
@@ -194,7 +160,7 @@ const LeaveManagement: React.FC<LeaveManagementProps> = ({ allowedOperations, do
     }
     setLoading(true);
     try {
-      await axios.delete(`http://localhost:8081/api/doctor-leaves/${leaveId}`);
+      await api.delete(`/doctor-leaves/${leaveId}`);
       setMessage(`Leave ID ${leaveId} deleted`);
       setLeaveId("");
       if (allowedOperations.includes("View All Leaves")) fetchAllLeaves();
@@ -206,12 +172,12 @@ const LeaveManagement: React.FC<LeaveManagementProps> = ({ allowedOperations, do
   };
 
   return (
-    <div className="leave-management">
-      {loading && <div className="loading">Loading...</div>}
-      {message && <div className="message">{message}</div>}
+    <div className={`${styles['leave-management']} ${isEmbedded ? styles['embedded-view'] : ''}`}>
+      {loading && <div className={styles['loading']}>Loading...</div>}
+      {message && <div className={styles['message']}>{message}</div>}
 
       {operationMode === "Create Leave" && (
-        <div className="form-container">
+        <div className={styles['form-container']}>
           <h3>Create Leave</h3>
           <form onSubmit={handleSubmit}>
             <>
@@ -242,7 +208,7 @@ const LeaveManagement: React.FC<LeaveManagementProps> = ({ allowedOperations, do
       )}
 
       {operationMode === "View Leave by Doctor ID" && (
-        <div className="form-container">
+        <div className={styles['form-container']}>
           <h3>View Leaves by Doctor ID</h3>
           <label>Doctor ID:</label>
           <input value={viewDoctorId} onChange={(e) => setViewDoctorId(e.target.value)} disabled={!!doctorId} />
@@ -260,10 +226,10 @@ const LeaveManagement: React.FC<LeaveManagementProps> = ({ allowedOperations, do
       )}
 
       {operationMode === "View All Leaves" && (
-        <div className="all-leaves-container">
+        <div className={styles['all-leaves-container']}>
           <h3>All Leaves</h3>
           {leaves.length > 0 ? (
-            <table className="leaves-table">
+            <table className={styles['leaves-table']}>
               <thead>
                 <tr>
                   <th>Leave ID</th>
@@ -298,10 +264,10 @@ const LeaveManagement: React.FC<LeaveManagementProps> = ({ allowedOperations, do
       )}
 
       {operationMode === "View Pending Leaves" && (
-        <div className="all-leaves-container">
+        <div className={styles['all-leaves-container']}>
           <h3>Pending Leaves</h3>
           {leaves.length > 0 ? (
-            <table className="leaves-table">
+            <table className={styles['leaves-table']}>
               <thead>
                 <tr>
                   <th>Leave ID</th>
@@ -336,7 +302,7 @@ const LeaveManagement: React.FC<LeaveManagementProps> = ({ allowedOperations, do
       )}
 
       {operationMode === "Update Leave Status" && (
-        <div className="form-container">
+        <div className={styles['form-container']}>
           <h3>Update Leave Status</h3>
           <label>Leave ID:</label>
           <input value={leaveId} onChange={(e) => setLeaveId(e.target.value)} />
@@ -350,7 +316,7 @@ const LeaveManagement: React.FC<LeaveManagementProps> = ({ allowedOperations, do
       )}
 
       {operationMode === "Delete Leave" && (
-        <div className="form-container">
+        <div className={styles['form-container']}>
           <h3>Delete Leave</h3>
           <label>Leave ID:</label>
           <input value={leaveId} onChange={(e) => setLeaveId(e.target.value)} />

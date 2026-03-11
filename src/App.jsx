@@ -13,17 +13,18 @@ const App = () => {
       <div>
         <Navbar /> {/* Include the Navbar here */}
 
-        
-      
+
+
         <Routes>
-         
+
           <Route path="/" element={<Login />} />
 
-          
+
           <Route path="/patient" element={<PatientPage />} />
           <Route path="/doctor" element={<DoctorPage />} />
           <Route path="/admin" element={<AdminPage />} />
-          <Route path="/super-admin-dashboard" element={<AdminPage />} /> {/* You can customize this */}
+          <Route path="/super-admin-dashboard" element={<AdminPage />} />
+          <Route path="/receptionist" element={<PatientPage />} />
         </Routes>
       </div>
     </Router>

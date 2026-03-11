@@ -1,20 +1,25 @@
-/* Reset default body margin */
-body {
-  margin: 0;
-  height: auto; /* Removed fixed height */
-  overflow-y: auto; /* Enable scrolling if content overflows */
-}
+/* Removed global body styles */
 
 /* Main container for the doctor page */
 .doctor-container {
   max-width: 1200px;
-  margin: 20px auto; /* Match AppointmentPage margin */
+  margin: 20px auto;
+  /* Match AppointmentPage margin */
   padding: 20px;
   font-family: Arial, sans-serif;
   background-color: #f5f6fa;
   display: flex;
   flex-direction: column;
   /* Removed min-height: 100vh and overflow: hidden */
+}
+
+/* Override for Embedded View */
+.embedded-view {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  box-shadow: none;
+  background-color: transparent;
 }
 
 /* Header styling */
@@ -44,7 +49,8 @@ body {
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   /* Removed overflow: hidden */
-  flex-shrink: 0; /* Prevent sidebar from shrinking unexpectedly */
+  flex-shrink: 0;
+  /* Prevent sidebar from shrinking unexpectedly */
 }
 
 /* Sidebar section */
@@ -132,16 +138,16 @@ label {
   color: #2c3e50;
 }
 
-input[type="text"],
-input[type="number"],
-input[type="email"] {
-  width: 100%;
+.doctor-container input[type="text"],
+.doctor-container input[type="number"],
+.doctor-container input[type="email"] {
+
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
 }
 
-input:disabled {
+.doctor-container input:disabled {
   background-color: #f0f0f0;
 }
 
@@ -186,22 +192,22 @@ input:disabled {
 }
 
 /* Table styling */
-table,
-th,
-td {
+.appointment-management table,
+.appointment-management th,
+.appointment-management td {
   border: 1px solid black;
   border-collapse: collapse;
   padding: 8px;
   text-align: center;
 }
 
-th {
+.appointment-management th {
   color: blue;
   cursor: pointer;
   background-color: #f0f2f5;
 }
 
-tr:hover {
+.appointment-management tr:hover {
   background-color: #f5faff;
 }
 
@@ -276,4 +282,77 @@ tr:hover {
   .access-denied {
     padding: 30px 10px;
   }
+}
+
+/* Payment Related Styles */
+.status-paid {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.85rem;
+  border: 1px solid #c3e6cb;
+}
+
+.status-unpaid {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.85rem;
+  border: 1px solid #f5c6cb;
+}
+
+.pay-btn {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-left: 10px;
+  transition: background-color 0.2s;
+}
+
+.pay-btn:hover {
+  background-color: #218838;
+}
+
+.pay-button-table {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: bold;
+  transition: transform 0.1s;
+}
+
+.pay-button-table:hover {
+  background-color: #218838;
+  transform: scale(1.05);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 15px;
+}
+
+.status-paid-input {
+  color: #155724 !important;
+  background-color: #d4edda !important;
+  font-weight: bold;
+}
+
+.status-unpaid-input {
+  color: #721c24 !important;
+  background-color: #f8d7da !important;
+  font-weight: bold;
 }

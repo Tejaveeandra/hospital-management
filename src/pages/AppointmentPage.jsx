@@ -1,60 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "./AppointmentPage.css";
+import api from "../api/api";
+import styles from "./AppointmentPage.module.css";
+import PaymentModal from "../component/PaymentModal";
 
-// Define interfaces
-interface Appointment {
-  appointmentId: number;
-  patientId: number;
-  patientName: string;
-  disease: string;
-  doctorId: number;
-  doctorName: string;
-  appointmentDate: string;
-  timeSlot: string;
-  isEmergency: boolean;
-  isPreferredDoctor: boolean;
-}
-
-export type AppointmentOperation =
-  | "Create Appointment"
-  | "View Appointment by ID"
-  | "View All Appointments"
-  | "Update Appointment"
-  | "Reschedule Appointment"
-  | "Cancel Appointment"
-  | "Delete All Appointments"
-  | "View Appointments by Doctor and Date"
-  | "Get Appointment Count by Doctor and Date";
-
-interface AppointmentManagementProps {
-  allowedOperations: AppointmentOperation[];
-  doctorId?: string;
-  operationMode?: AppointmentOperation;
-  user?: User | null; // Add user prop
-}
-
-interface AppointmentFormData {
-  patientId: string;
-  departmentId: string;
-  appointmentDate: string;
-  timeSlot: string;
-  preferredDoctorId: string;
-  isEmergency: boolean;
-  isPreferredDoctor: boolean;
-  appointmentId?: string;
-  newAppointmentDate?: string;
-  newTimeSlot?: string;
-}
-
-interface User {
-  id: string;
-  role: "patient" | "doctor" | "admin";
-  token: string;
-}
-
-const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOperations, doctorId, operationMode, user: propUser }) => {
-  const [formData, setFormData] = useState<AppointmentFormData>({
+const AppointmentManagement = ({ allowedOperations, doctorId, operationMode, user: propUser, isEmbedded = false }) => {
+  const [formData, setFormData] = useState({
     patientId: propUser?.role === "patient" ? propUser.id : "",
     departmentId: "",
     appointmentDate: new Date().toISOString().split("T")[0],
@@ -63,18 +14,26 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
     isEmergency: false,
     isPreferredDoctor: false,
   });
-  const [viewAppointmentId, setViewAppointmentId] = useState<string>("");
-  const [doctorIdFilter, setDoctorIdFilter] = useState<string>(doctorId || "");
-  const [dateFilter, setDateFilter] = useState<string>(new Date().toISOString().split("T")[0]);
-  const [message, setMessage] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [appointmentCount, setAppointmentCount] = useState<number>(0);
-  const [createdAppointment, setCreatedAppointment] = useState<Appointment | null>(null);
-  const [user] = useState<User | null>(propUser || null); // Use propUser
+  const [viewAppointmentId, setViewAppointmentId] = useState("");
+  const [doctorIdFilter, setDoctorIdFilter] = useState(doctorId || "");
+  const [dateFilter, setDateFilter] = useState(new Date().toISOString().split("T")[0]);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [appointments, setAppointments] = useState([]);
+  const [appointmentCount, setAppointmentCount] = useState(0);
+  const [createdAppointment, setCreatedAppointment] = useState(null);
+  const [user] = useState(() => {
+    if (propUser) return propUser;
+    const role = localStorage.getItem("role");
+    // Some pages use 'userId', some use 'id'. Check both.
+    const id = localStorage.getItem("userId") || localStorage.getItem("id");
+    return role ? { role, id } : null;
+  });
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
 
   // Use the prop-based operationMode if provided, otherwise fall back to the first allowed operation
-  const [internalOperationMode, setInternalOperationMode] = useState<AppointmentOperation>(
+  const [internalOperationMode, setInternalOperationMode] = useState(
     operationMode || allowedOperations[0] || "View Appointment by ID"
   );
 
@@ -102,7 +61,7 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
   }, [operationMode, allowedOperations, internalOperationMode, user?.role]);
 
   // Role-based operations mapping
-  const roleOperations: Record<string, AppointmentOperation[]> = {
+  const roleOperations = {
     patient: ["Create Appointment", "View Appointment by ID", "Reschedule Appointment", "Cancel Appointment"],
     doctor: [
       "View Appointment by ID",
@@ -145,7 +104,7 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
     }
   }, [internalOperationMode, allowedOperations]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -153,7 +112,7 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (internalOperationMode !== "Create Appointment") return;
     if (!formData.patientId || isNaN(Number(formData.patientId)) || Number(formData.patientId) < 1) {
@@ -184,13 +143,19 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
         isEmergency: formData.isEmergency,
         isPreferredDoctor: formData.isPreferredDoctor,
       };
-      const response = await axios.post<Appointment>(
-        "http://localhost:8081/appointments/fixAppointment",
-        payload,
-        { headers: { Authorization: `Bearer ${user?.token}` } }
+      const response = await api.post(
+        "/appointments/fixAppointment",
+        payload
       );
       const newAppointment = response.data;
       setMessage(`Appointment created: ID ${newAppointment.appointmentId}`);
+      if (user?.role === "patient" || user?.role === "admin") {
+        setSelectedAppointment({
+          appointmentId: newAppointment.appointmentId,
+          amount: 500 // Default or fetched from backend if available
+        });
+        setShowPaymentModal(true);
+      }
       setCreatedAppointment(newAppointment);
       setFormData({
         patientId: user?.role === "patient" ? user.id : "",
@@ -234,9 +199,8 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
     }
     setLoading(true);
     try {
-      const response = await axios.get<Appointment>(
-        `http://localhost:8081/appointments/${viewAppointmentId}`,
-        { headers: { Authorization: `Bearer ${user?.token}` } }
+      const response = await api.get(
+        `/appointments/${viewAppointmentId}`
       );
       setAppointments([response.data]);
       setMessage(`Appointment ID ${viewAppointmentId} fetched.`);
@@ -251,9 +215,8 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
     if (internalOperationMode !== "View All Appointments") return;
     setLoading(true);
     try {
-      const response = await axios.get<Appointment[]>(
-        "http://localhost:8081/appointments/ViewAllAppointments",
-        { headers: { Authorization: `Bearer ${user?.token}` } }
+      const response = await api.get(
+        "/appointments/ViewAllAppointments"
       );
       setAppointments(response.data);
       setMessage("All appointments fetched.");
@@ -264,7 +227,7 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
     }
   };
 
-  const updateAppointment = async (e: React.FormEvent) => {
+  const updateAppointment = async (e) => {
     if (internalOperationMode !== "Update Appointment") return;
     e.preventDefault();
     if (!formData.appointmentId || isNaN(Number(formData.appointmentId))) {
@@ -298,10 +261,9 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
         preferredDoctorId: Number(formData.preferredDoctorId),
         isEmergency: formData.isEmergency,
       };
-      const response = await axios.put<Appointment>(
-        `http://localhost:8081/appointments/${formData.appointmentId}`,
-        payload,
-        { headers: { Authorization: `Bearer ${user?.token}` } }
+      const response = await api.put(
+        `/appointments/${formData.appointmentId}`,
+        payload
       );
       setMessage(`Appointment ID ${formData.appointmentId} updated.`);
       setFormData({
@@ -322,7 +284,7 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
     }
   };
 
-  const rescheduleAppointment = async (e: React.FormEvent) => {
+  const rescheduleAppointment = async (e) => {
     if (internalOperationMode !== "Reschedule Appointment") return;
     e.preventDefault();
     if (!formData.appointmentId || isNaN(Number(formData.appointmentId))) {
@@ -340,15 +302,14 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
 
     setLoading(true);
     try {
-      const response = await axios.put<Appointment>(
-        `http://localhost:8081/appointments/appointments/reschedule/${formData.appointmentId}`,
+      const response = await api.put(
+        `/appointments/reschedule/${formData.appointmentId}`,
         {},
         {
           params: {
             newAppointmentDate: formData.newAppointmentDate,
             newTimeSlot: formData.newTimeSlot,
-          },
-          headers: { Authorization: `Bearer ${user?.token}` },
+          }
         }
       );
       setMessage(`Appointment ID ${formData.appointmentId} rescheduled.`);
@@ -374,9 +335,8 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
     }
     setLoading(true);
     try {
-      await axios.delete(
-        `http://localhost:8081/appointments/appointments/cancel/${formData.appointmentId}`,
-        { headers: { Authorization: `Bearer ${user?.token}` } }
+      await api.delete(
+        `/appointments/cancel/${formData.appointmentId}`
       );
       setMessage(`Appointment ID ${formData.appointmentId} canceled.`);
       setFormData({ ...formData, appointmentId: "" });
@@ -392,9 +352,7 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
     if (internalOperationMode !== "Delete All Appointments") return;
     setLoading(true);
     try {
-      await axios.delete("http://localhost:8081/appointments/deleteAll", {
-        headers: { Authorization: `Bearer ${user?.token}` },
-      });
+      await api.delete("/appointments/deleteAll");
       setMessage("All appointments deleted.");
       setAppointments([]);
     } catch (error) {
@@ -416,9 +374,8 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
     }
     setLoading(true);
     try {
-      const response = await axios.get<Appointment[]>(
-        `http://localhost:8081/appointments/doctor/${doctorIdFilter}/date/${dateFilter}`,
-        { headers: { Authorization: `Bearer ${user?.token}` } }
+      const response = await api.get(
+        `/appointments/doctor/${doctorIdFilter}/date/${dateFilter}`
       );
       setAppointments(response.data);
       setMessage(`Appointments for Doctor ID ${doctorIdFilter} on ${dateFilter} fetched.`);
@@ -441,9 +398,8 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
     }
     setLoading(true);
     try {
-      const response = await axios.get<number>(
-        `http://localhost:8081/appointments/doctor/${doctorIdFilter}/count/date/${dateFilter}`,
-        { headers: { Authorization: `Bearer ${user?.token}` } }
+      const response = await api.get(
+        `/appointments/doctor/${doctorIdFilter}/count/date/${dateFilter}`
       );
       setAppointmentCount(response.data);
       setMessage(`Appointment count for Doctor ID ${doctorIdFilter} on ${dateFilter}: ${response.data}`);
@@ -454,16 +410,23 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
     }
   };
 
+  const handlePaymentSuccess = () => {
+    setMessage("Payment successful! Updating appointment list...");
+    if (internalOperationMode === "View All Appointments") fetchAllAppointments();
+    else if (internalOperationMode === "View Appointment by ID" && viewAppointmentId) fetchAppointmentById();
+    else if (internalOperationMode === "View Appointments by Doctor and Date") fetchAppointmentsByDoctorAndDate();
+  };
+
   return (
-    <div className="appointment-management">
-      {loading && <div className="loading">Loading...</div>}
-      {message && <div className="message">{message}</div>}
+    <div className={`${styles['appointment-management']} ${isEmbedded ? styles['embedded-view'] : ''}`}>
+      {loading && <div className={styles['loading']}>Loading...</div>}
+      {message && <div className={styles['message']}>{message}</div>}
 
       {internalOperationMode === "Create Appointment" && (
-        <div className="form-container">
+        <div className={styles['form-container']}>
           <h3>Create Appointment</h3>
           {createdAppointment ? (
-            <div className="appointment-details-form">
+            <div className={styles['appointment-details-form']}>
               <label>Appointment ID:</label>
               <input type="text" value={createdAppointment.appointmentId} disabled />
               <label>Patient ID:</label>
@@ -482,9 +445,30 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
               <input type="text" value={createdAppointment.timeSlot} disabled />
               <label>Emergency:</label>
               <input type="text" value={createdAppointment.isEmergency ? "Yes" : "No"} disabled />
+              <label>Payment Status:</label>
+              <input
+                type="text"
+                value={createdAppointment.isPaid ? "Paid" : "Unpaid"}
+                className={createdAppointment.isPaid ? styles['status-paid-input'] : styles['status-unpaid-input']}
+                disabled
+              />
               {/* <label>Preferred Doctor:</label> */}
               {/* <input type="text" value={createdAppointment.isPreferredDoctor ? "Yes" : "No"} disabled /> */}
-              <button onClick={resetForm} disabled={loading}>Create New Appointment</button>
+              <div className={styles['action-buttons']}>
+                <button onClick={resetForm} disabled={loading}>Create New Appointment</button>
+                {(user?.role === "patient" || user?.role === "admin") && !createdAppointment.isPaid && (
+                  <button
+                    onClick={() => {
+                      setSelectedAppointment({ appointmentId: createdAppointment.appointmentId, amount: 500 });
+                      setShowPaymentModal(true);
+                    }}
+                    className={styles['pay-btn']}
+                    disabled={loading}
+                  >
+                    Pay Now
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
@@ -496,7 +480,6 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
                 onChange={handleInputChange}
                 min="1"
                 required
-                disabled={user?.role === "patient"}
               />
               <label>Department ID:</label>
               <input
@@ -559,8 +542,8 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
       )}
 
       {internalOperationMode === "View Appointment by ID" && (
-        <div className="form-container">
-          <div className="input-section">
+        <div className={styles['form-container']}>
+          <div className={styles['input-section']}>
             <h3>View Appointment by ID</h3>
             <label>Appointment ID:</label>
             <input
@@ -571,8 +554,8 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
             <button onClick={fetchAppointmentById} disabled={loading}>Fetch</button>
           </div>
           {appointments.length > 0 && (
-            <div className="results-section">
-              <table className="appointments-table">
+            <div className={styles['results-section']}>
+              <table className={styles['appointments-table']}>
                 <thead>
                   <tr>
                     <th>Appointment ID</th>
@@ -585,6 +568,8 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
                     <th>Time Slot</th>
                     <th>Emergency</th>
                     {/* <th>Preferred Doctor</th> */}
+                    <th>Payment Status</th>
+                    {(user?.role === 'patient' || user?.role === 'admin') && <th>Action</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -600,6 +585,26 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
                       <td>{appointment.timeSlot}</td>
                       <td>{appointment.isEmergency ? "Yes" : "No"}</td>
                       {/* <td>{appointment.isPreferredDoctor ? "Yes" : "No"}</td> */}
+                      <td>
+                        <span className={appointment.isPaid ? styles['status-paid'] : styles['status-unpaid']}>
+                          {appointment.isPaid ? "Paid" : "Unpaid"}
+                        </span>
+                      </td>
+                      {(user?.role === 'patient' || user?.role === 'admin') && (
+                        <td>
+                          {!appointment.isPaid && (
+                            <button
+                              onClick={() => {
+                                setSelectedAppointment({ appointmentId: appointment.appointmentId, amount: 500 });
+                                setShowPaymentModal(true);
+                              }}
+                              className={styles['pay-button-table']}
+                            >
+                              Pay
+                            </button>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -610,10 +615,10 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
       )}
 
       {internalOperationMode === "View All Appointments" && (
-        <div className="all-appointments-container">
+        <div className={styles['all-appointments-container']}>
           <h3>All Appointments</h3>
           {appointments.length > 0 ? (
-            <table className="appointments-table">
+            <table className={styles['appointments-table']}>
               <thead>
                 <tr>
                   <th>Appointment ID</th>
@@ -626,6 +631,8 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
                   <th>Time Slot</th>
                   <th>Emergency</th>
                   {/* <th>Preferred Doctor</th> */}
+                  <th>Payment Status</th>
+                  {(user?.role === 'patient' || user?.role === 'admin') && <th>Action</th>}
                 </tr>
               </thead>
               <tbody>
@@ -641,6 +648,26 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
                     <td>{appointment.timeSlot}</td>
                     <td>{appointment.isEmergency ? "Yes" : "No"}</td>
                     {/* <td>{appointment.isPreferredDoctor ? "Yes" : "No"}</td> */}
+                    <td>
+                      <span className={appointment.isPaid ? styles['status-paid'] : styles['status-unpaid']}>
+                        {appointment.isPaid ? "Paid" : "Unpaid"}
+                      </span>
+                    </td>
+                    {(user?.role === 'patient' || user?.role === 'admin') && (
+                      <td>
+                        {!appointment.isPaid && (
+                          <button
+                            onClick={() => {
+                              setSelectedAppointment({ appointmentId: appointment.appointmentId, amount: 500 });
+                              setShowPaymentModal(true);
+                            }}
+                            className={styles['pay-button-table']}
+                          >
+                            Pay
+                          </button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -652,7 +679,7 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
       )}
 
       {internalOperationMode === "Update Appointment" && (
-        <div className="form-container">
+        <div className={styles['form-container']}>
           <h3>Update Appointment</h3>
           <form onSubmit={updateAppointment}>
             <label>Appointment ID:</label>
@@ -719,7 +746,7 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
       )}
 
       {internalOperationMode === "Reschedule Appointment" && (
-        <div className="form-container">
+        <div className={styles['form-container']}>
           <h3>Reschedule Appointment</h3>
           <form onSubmit={rescheduleAppointment}>
             <label>Appointment ID:</label>
@@ -753,7 +780,7 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
       )}
 
       {internalOperationMode === "Cancel Appointment" && (
-        <div className="form-container">
+        <div className={styles['form-container']}>
           <h3>Cancel Appointment</h3>
           <label>Appointment ID:</label>
           <input
@@ -767,14 +794,14 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
       )}
 
       {internalOperationMode === "Delete All Appointments" && (
-        <div className="form-container">
+        <div className={styles['form-container']}>
           <h3>Delete All Appointments</h3>
           <button onClick={deleteAllAppointments} disabled={loading}>Delete All</button>
         </div>
       )}
 
       {internalOperationMode === "View Appointments by Doctor and Date" && (
-        <div className="form-container">
+        <div className={styles['form-container']}>
           <h3>View Appointments by Doctor and Date</h3>
           <label>Doctor ID:</label>
           <input
@@ -792,7 +819,7 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
           />
           <button onClick={fetchAppointmentsByDoctorAndDate} disabled={loading}>Fetch</button>
           {appointments.length > 0 && (
-            <table className="appointments-table">
+            <table className={styles['appointments-table']}>
               <thead>
                 <tr>
                   <th>Appointment ID</th>
@@ -805,6 +832,8 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
                   <th>Time Slot</th>
                   <th>Emergency</th>
                   <th>Preferred Doctor</th>
+                  <th>Payment Status</th>
+                  {(user?.role === 'patient' || user?.role === 'admin') && <th>Action</th>}
                 </tr>
               </thead>
               <tbody>
@@ -820,6 +849,26 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
                     <td>{appointment.timeSlot}</td>
                     <td>{appointment.isEmergency ? "Yes" : "No"}</td>
                     <td>{appointment.isPreferredDoctor ? "Yes" : "No"}</td>
+                    <td>
+                      <span className={appointment.isPaid ? styles['status-paid'] : styles['status-unpaid']}>
+                        {appointment.isPaid ? "Paid" : "Unpaid"}
+                      </span>
+                    </td>
+                    {(user?.role === 'patient' || user?.role === 'admin') && (
+                      <td>
+                        {!appointment.isPaid && (
+                          <button
+                            onClick={() => {
+                              setSelectedAppointment({ appointmentId: appointment.appointmentId, amount: 500 });
+                              setShowPaymentModal(true);
+                            }}
+                            className={styles['pay-button-table']}
+                          >
+                            Pay
+                          </button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -829,7 +878,7 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
       )}
 
       {internalOperationMode === "Get Appointment Count by Doctor and Date" && (
-        <div className="form-container">
+        <div className={styles['form-container']}>
           <h4>Get Appointment Count by Doctor and Date</h4>
           <label>Doctor ID:</label>
           <input
@@ -848,6 +897,15 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ allowedOp
           <button onClick={fetchAppointmentCountByDoctorAndDate} disabled={loading}>Fetch Count</button>
           {appointmentCount >= 0 && <p>Appointment Count: {appointmentCount}</p>}
         </div>
+      )}
+
+      {showPaymentModal && selectedAppointment && (
+        <PaymentModal
+          appointmentId={selectedAppointment.appointmentId}
+          amount={selectedAppointment.amount}
+          onClose={() => setShowPaymentModal(false)}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
       )}
     </div>
   );

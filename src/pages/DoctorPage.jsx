@@ -1,55 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
-import axios from "axios";
+import api from "../api/api";
 import LeaveManagement, { LeaveOperation } from "./DoctorLeavePage";
 import AppointmentManagement, { AppointmentOperation } from "./AppointmentPage";
-import "./DoctorPage.css";
-
-// Define interfaces
-interface Doctor {
-  doctorId: number;
-  doctorName: string;
-  specialization: string;
-  contact: string;
-  yoe: number;
-  departmentName?: string;
-}
-
-interface FormData {
-  doctorName: string;
-  specialization: string;
-  contact: string;
-  yoe: string;
-}
-
-interface DoctorPageProps {
-  allowedOperations?: string[];
-  initialOperation?: string;
-  showHeaders?: boolean; // Prop to control header display, defaults to true
-}
-
-interface DoctorContentProps {
-  operationMode: string;
-  doctorId: number | null;
-  formData: FormData;
-  createdDoctor: Doctor | null;
-  doctorFetched: boolean;
-  allDoctors: Doctor[];
-  viewAllMode: boolean;
-  currentPage: number;
-  totalPages: number;
-  loading: boolean;
-  message: string;
-  handleSubmit: (e: React.FormEvent) => void;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
-  fetchDoctor: () => void;
-  handleDeleteDoctor: () => void;
-  handlePreviousPage: () => void;
-  handleNextPage: () => void;
-  setDoctorId: (id: number | null) => void;
-}
+import PrescriptionsPage from "./PrescriptionsPage";
+import styles from "./DoctorPage.module.css";
 
 // DoctorContent component with React.memo
-const DoctorContent: React.FC<DoctorContentProps> = React.memo(({
+const DoctorContent = React.memo(({
   operationMode,
   doctorId,
   formData,
@@ -69,7 +26,7 @@ const DoctorContent: React.FC<DoctorContentProps> = React.memo(({
   handleNextPage,
   setDoctorId,
 }) => {
-  const leaveOperations: LeaveOperation[] = [];
+  const leaveOperations = [];
   if (operationMode === "createLeave") {
     leaveOperations.push("Create Leave");
   } else if (operationMode === "viewLeaveByDoctorId") {
@@ -77,7 +34,7 @@ const DoctorContent: React.FC<DoctorContentProps> = React.memo(({
   }
 
   // Map DoctorPage operationMode to AppointmentManagement operationMode
-  const appointmentOperationMap: Record<string, AppointmentOperation> = {
+  const appointmentOperationMap = {
     appointmentViewById: "View Appointment by ID",
     appointmentUpdate: "Update Appointment",
     appointmentReschedule: "Reschedule Appointment",
@@ -86,20 +43,28 @@ const DoctorContent: React.FC<DoctorContentProps> = React.memo(({
     appointmentCountByDoctorDate: "Get Appointment Count by Doctor and Date",
   };
 
+  const prescriptionOperationMap = {
+    prescriptionCreate: "Create Prescription",
+    prescriptionByPatient: "Prescriptions by Patient",
+    prescriptionMy: "List Prescriptions",
+  };
+
   const currentAppointmentOperation = appointmentOperationMap[operationMode] || "View Appointment by ID";
+  const currentPrescriptionOperation = prescriptionOperationMap[operationMode];
+  const userRole = localStorage.getItem("role") || "patient";
 
   return (
-    <div className="right-panel">
-      {loading && <p className="loading-message">Loading...</p>}
+    <div className={styles['right-panel']}>
+      {loading && <p className={styles['loading-message']}>Loading...</p>}
 
-      {operationMode && operationMode !== "viewAll" && operationMode !== "createLeave" && operationMode !== "viewLeaveByDoctorId" && !Object.keys(appointmentOperationMap).includes(operationMode) && (
-        <div className="operation-content">
+      {operationMode && operationMode !== "viewAll" && operationMode !== "createLeave" && operationMode !== "viewLeaveByDoctorId" && !Object.keys(appointmentOperationMap).includes(operationMode) && !Object.keys(prescriptionOperationMap).includes(operationMode) && (
+        <div className={styles['operation-content']}>
           <h2>
             {operationMode === "create" && createdDoctor ? "Created Doctor Details" :
-            operationMode === "create" ? "Create Doctor" :
-            operationMode === "update" && createdDoctor ? "Updated Doctor Details" :
-            operationMode === "update" ? "Update Doctor" :
-            operationMode === "delete" ? "Delete Doctor" : "Doctor Details"}
+              operationMode === "create" ? "Create Doctor" :
+                operationMode === "update" && createdDoctor ? "Updated Doctor Details" :
+                  operationMode === "update" ? "Update Doctor" :
+                    operationMode === "delete" ? "Delete Doctor" : "Doctor Details"}
           </h2>
 
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -156,7 +121,7 @@ const DoctorContent: React.FC<DoctorContentProps> = React.memo(({
                 ) : (
                   <>
                     {operationMode === "update" && (
-                      <div className="doctor-id-display">
+                      <div className={styles['doctor-id-display']}>
                         <label>Doctor ID:</label>
                         <input type="text" value={doctorId || ""} disabled />
                       </div>
@@ -169,7 +134,7 @@ const DoctorContent: React.FC<DoctorContentProps> = React.memo(({
                     <input type="text" name="contact" placeholder="Contact (10 digits)" value={formData.contact} onChange={handleInputChange} required pattern="\d{10}" disabled={loading} />
                     <label>Years of Experience:</label>
                     <input type="number" name="yoe" placeholder="Years of Experience" value={formData.yoe} onChange={handleInputChange} required min="0" disabled={loading} />
-                    <div className="doctor-action-buttons">
+                    <div className={styles['doctor-action-buttons']}>
                       <button type="submit" disabled={loading}>
                         {loading ? (operationMode === "create" ? "Creating..." : "Updating...") : (operationMode === "create" ? "Create Doctor" : "Update Doctor")}
                       </button>
@@ -190,11 +155,11 @@ const DoctorContent: React.FC<DoctorContentProps> = React.memo(({
       )}
 
       {operationMode === "viewAll" && viewAllMode && (
-        <div className="all-doctors-container">
+        <div className={styles['all-doctors-container']}>
           <h2>All Doctors</h2>
           {allDoctors.length > 0 ? (
             <>
-              <table className="doctors-table">
+              <table className={styles['doctors-table']}>
                 <thead>
                   <tr>
                     <th>ID</th>
@@ -206,7 +171,7 @@ const DoctorContent: React.FC<DoctorContentProps> = React.memo(({
                   </tr>
                 </thead>
                 <tbody>
-                  {allDoctors.map((doctor: Doctor) => (
+                  {allDoctors.map((doctor) => (
                     <tr key={doctor.doctorId}>
                       <td>{doctor.doctorId}</td>
                       <td>{doctor.doctorName}</td>
@@ -218,7 +183,7 @@ const DoctorContent: React.FC<DoctorContentProps> = React.memo(({
                   ))}
                 </tbody>
               </table>
-              <div className="pagination-controls">
+              <div className={styles['pagination-controls']}>
                 <button onClick={handlePreviousPage} disabled={currentPage === 0 || loading}>Previous</button>
                 <span>Page {currentPage + 1} of {totalPages}</span>
                 <button onClick={handleNextPage} disabled={currentPage >= totalPages - 1 || loading}>Next</button>
@@ -238,56 +203,65 @@ const DoctorContent: React.FC<DoctorContentProps> = React.memo(({
         "appointmentViewByDoctorDate",
         "appointmentCountByDoctorDate",
       ].includes(operationMode) && (
-        <AppointmentManagement
-          allowedOperations={[
-            "View Appointment by ID",
-            "Update Appointment",
-            "Reschedule Appointment",
-            "Cancel Appointment",
-            "View Appointments by Doctor and Date",
-            "Get Appointment Count by Doctor and Date",
-          ]}
-          doctorId={doctorId?.toString() || ""}
-          operationMode={currentAppointmentOperation}
+          <AppointmentManagement
+            allowedOperations={[
+              "View Appointment by ID",
+              "Update Appointment",
+              "Reschedule Appointment",
+              "Cancel Appointment",
+              "View Appointments by Doctor and Date",
+              "Get Appointment Count by Doctor and Date",
+            ]}
+            doctorId={doctorId?.toString() || ""}
+            operationMode={currentAppointmentOperation}
+            user={{ role: userRole, id: localStorage.getItem("id") }}
+          />
+        )}
+
+      {currentPrescriptionOperation && (
+        <PrescriptionsPage
+          allowedOperations={[currentPrescriptionOperation]}
+          initialOperation={currentPrescriptionOperation}
+          isEmbedded={true}
         />
       )}
 
-      {message && <p className="status-message">{message}</p>}
+      {message && <p className={styles['status-message']}>{message}</p>}
     </div>
   );
 });
 
 // DoctorPage component
-const DoctorPage: React.FC<DoctorPageProps> = ({ allowedOperations = ["create", "getById", "update", "viewAll", "delete", "createLeave", "viewLeaveByDoctorId", "appointmentViewById", "appointmentUpdate", "appointmentReschedule", "appointmentCancel", "appointmentViewByDoctorDate", "appointmentCountByDoctorDate"], initialOperation, showHeaders = true }) => {
-  const [operationMode, setOperationMode] = useState<string>(initialOperation || "");
-  const [doctorId, setDoctorId] = useState<number | null>(null);
-  const [formData, setFormData] = useState<FormData>({
+const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewAll", "delete", "createLeave", "viewLeaveByDoctorId", "appointmentViewById", "appointmentUpdate", "appointmentReschedule", "appointmentCancel", "appointmentViewByDoctorDate", "appointmentCountByDoctorDate", "prescriptionCreate", "prescriptionByPatient", "prescriptionMy"], initialOperation, showHeaders = true }) => {
+  const [operationMode, setOperationMode] = useState(initialOperation || "");
+  const [doctorId, setDoctorId] = useState(null);
+  const [formData, setFormData] = useState({
     doctorName: "",
     specialization: "",
     contact: "",
     yoe: "",
   });
-  const [message, setMessage] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [createdDoctor, setCreatedDoctor] = useState<Doctor | null>(null);
-  const [doctorFetched, setDoctorFetched] = useState<boolean>(false);
-  const [allDoctors, setAllDoctors] = useState<Doctor[]>([]);
-  const [viewAllMode, setViewAllMode] = useState<boolean>(false);
-  const [currentPage, setCurrentPage] = useState<number>(0);
-  const [pageSize] = useState<number>(15);
-  const [totalPages, setTotalPages] = useState<number>(0);
-  const [sortBy] = useState<string>("doctorId");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [createdDoctor, setCreatedDoctor] = useState(null);
+  const [doctorFetched, setDoctorFetched] = useState(false);
+  const [allDoctors, setAllDoctors] = useState([]);
+  const [viewAllMode, setViewAllMode] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(15);
+  const [totalPages, setTotalPages] = useState(0);
+  const [sortBy] = useState("doctorId");
 
   const userRole = localStorage.getItem("role") || "patient";
 
-  const fetchAllDoctors = useCallback(async (page: number = currentPage) => {
+  const fetchAllDoctors = useCallback(async (page = currentPage) => {
     if (!["admin", "super-admin"].includes(userRole)) {
       setMessage("You do not have permission to view all doctors.");
       return;
     }
     setLoading(true);
     try {
-      const response = await axios.get("http://localhost:8081/doctors/", {
+      const response = await api.get("/doctors/", {
         params: { page, size: pageSize, sortBy },
         timeout: 10000,
       });
@@ -331,7 +305,7 @@ const DoctorPage: React.FC<DoctorPageProps> = ({ allowedOperations = ["create", 
     setLoading(false);
   }, [operationMode]);
 
-  const handleOperation = useCallback((mode: string) => {
+  const handleOperation = useCallback((mode) => {
     setMessage(""); // Clear message when switching operations
     setOperationMode(mode);
     resetForm();
@@ -348,7 +322,7 @@ const DoctorPage: React.FC<DoctorPageProps> = ({ allowedOperations = ["create", 
     }
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:8081/doctors/${doctorId}`);
+      const response = await api.get(`/doctors/${doctorId}`);
       if (response.status === 200 && response.data) {
         setFormData({
           doctorName: response.data.doctorName,
@@ -370,11 +344,11 @@ const DoctorPage: React.FC<DoctorPageProps> = ({ allowedOperations = ["create", 
     }
   }, [doctorId]);
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = useCallback((e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   }, []);
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     setLoading(true);
     if (operationMode === "create" && !["admin", "super-admin"].includes(userRole)) {
@@ -385,12 +359,12 @@ const DoctorPage: React.FC<DoctorPageProps> = ({ allowedOperations = ["create", 
     try {
       let response;
       if (operationMode === "update" && doctorId) {
-        response = await axios.put(`http://localhost:8081/doctors/updateDoctor/${doctorId}`, formData);
+        response = await api.put(`/doctors/updateDoctor/${doctorId}`, formData);
         setMessage("Doctor updated successfully");
         setCreatedDoctor(response.data);
         setDoctorFetched(false);
       } else if (operationMode === "create") {
-        response = await axios.post("http://localhost:8081/doctors/addDoctor", formData);
+        response = await api.post("/doctors/addDoctor", formData);
         setDoctorId(response.data.doctorId);
         setMessage(`Doctor created successfully with ID: ${response.data.doctorId}`);
         setCreatedDoctor(response.data);
@@ -413,7 +387,7 @@ const DoctorPage: React.FC<DoctorPageProps> = ({ allowedOperations = ["create", 
     }
     setLoading(true);
     try {
-      const response = await axios.delete(`http://localhost:8081/doctors/deleteDoctor/${doctorId}`);
+      const response = await api.delete(`/doctors/deleteDoctor/${doctorId}`);
       setMessage(response.data);
       resetForm();
     } catch (error) {
@@ -423,7 +397,7 @@ const DoctorPage: React.FC<DoctorPageProps> = ({ allowedOperations = ["create", 
     }
   }, [doctorId, userRole, resetForm]);
 
-  const setDoctorIdCallback = useCallback((id: number | null) => {
+  const setDoctorIdCallback = useCallback((id) => {
     setDoctorId(id);
   }, []);
 
@@ -444,7 +418,7 @@ const DoctorPage: React.FC<DoctorPageProps> = ({ allowedOperations = ["create", 
   }, [initialOperation, fetchAllDoctors]);
 
   return (
-    <div className="doctor-container" style={{ flexGrow: 1 }}>
+    <div className={`${styles['doctor-container']} ${!showHeaders ? styles['admin-view'] : ''}`} style={{ flexGrow: 1 }}>
       {showHeaders && (
         <>
           <h1>WELCOME TO THE HOSPITAL MANAGEMENT SYSTEM</h1>
@@ -452,9 +426,9 @@ const DoctorPage: React.FC<DoctorPageProps> = ({ allowedOperations = ["create", 
         </>
       )}
       {!initialOperation ? (
-        <div className="split-container" style={{ flex: 1, display: "flex" }}>
-          <div className="left-panel">
-            <div className="doctor-action-buttons">
+        <div className={styles['split-container']}>
+          <div className={styles['left-panel']}>
+            <div className={styles['doctor-action-buttons']}>
               <h3>Doctor Operations</h3>
               {allowedOperations.includes("create") && ["admin", "super-admin"].includes(userRole) && (
                 <button onClick={() => handleOperation("create")} disabled={loading}>
@@ -523,6 +497,22 @@ const DoctorPage: React.FC<DoctorPageProps> = ({ allowedOperations = ["create", 
                   Get Appointment Count by Doctor and Date
                 </button>
               )}
+              <h3>Prescription Operations</h3>
+              {allowedOperations.includes("prescriptionCreate") && (
+                <button onClick={() => handleOperation("prescriptionCreate")} disabled={loading}>
+                  Create Prescription
+                </button>
+              )}
+              {allowedOperations.includes("prescriptionByPatient") && (
+                <button onClick={() => handleOperation("prescriptionByPatient")} disabled={loading}>
+                  Prescriptions by Patient
+                </button>
+              )}
+              {allowedOperations.includes("prescriptionMy") && (
+                <button onClick={() => handleOperation("prescriptionMy")} disabled={loading}>
+                  My Prescriptions
+                </button>
+              )}
             </div>
           </div>
           <DoctorContent
@@ -547,7 +537,7 @@ const DoctorPage: React.FC<DoctorPageProps> = ({ allowedOperations = ["create", 
           />
         </div>
       ) : (
-        <div className="right-panel full-width-content" style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        <div className={`${styles['right-panel']} ${styles['full-width-content']}`} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <DoctorContent
             operationMode={operationMode}
             doctorId={doctorId}

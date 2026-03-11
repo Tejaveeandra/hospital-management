@@ -1,0 +1,112 @@
+.container {
+  padding: 16px;
+  font-family: Arial, sans-serif;
+}
+
+.title {
+  color: #2c3e50;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #3498db;
+}
+
+.loading {
+  color: #7f8c8d;
+  margin-bottom: 12px;
+}
+
+.section {
+  background: #fff;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.section h3 {
+  color: #34495e;
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+}
+
+.section label {
+  display: block;
+  margin-bottom: 4px;
+  color: #2c3e50;
+}
+
+.section input {
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  margin-right: 8px;
+  border: 1px solid #bdc3c7;
+  border-radius: 4px;
+  max-width: 280px;
+}
+
+.section button {
+  padding: 8px 16px;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.section button:hover {
+  background-color: #2980b9;
+}
+
+.section button.danger {
+  background-color: #e74c3c;
+}
+
+.section button.danger:hover {
+  background-color: #c0392b;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+.table th,
+.table td {
+  border: 1px solid #bdc3c7;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.table th {
+  background-color: #ecf0f1;
+  color: #2c3e50;
+}
+
+.detail {
+  margin-top: 12px;
+  padding: 12px;
+  background: #ecf0f1;
+  border-radius: 4px;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin-top: 12px;
+}
+
+.list li {
+  padding: 6px 0;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.message {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-radius: 4px;
+}

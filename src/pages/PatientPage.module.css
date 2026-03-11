@@ -1,14 +1,18 @@
 /* PatientPage.css */
 .patient-container {
-  max-width: 1200px;
+
   margin: 0 auto;
   padding: 30px;
   font-family: 'Poppins', sans-serif;
   background: linear-gradient(135deg, #f0f4f8 0%, #e0e7ff 100%);
   min-height: 100vh;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
-h1 {
+.patient-container h1 {
+  width: 100%;
   text-align: center;
   color: #2c3e50;
   font-size: 2.5rem;
@@ -18,11 +22,7 @@ h1 {
   text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.split-container {
-  display: flex;
-  gap: 25px;
-  flex-wrap: wrap;
-}
+/* Removed unused .split-container */
 
 .left-panel {
   flex: 1;
@@ -37,8 +37,41 @@ h1 {
   flex: 3;
   background: #ffffff;
   padding: 25px;
-  border-radius: 15px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.embedded-view {
+  width: 100%;
+  height: auto;
+  border-radius: 0;
+  box-shadow: none;
+  background-color: transparent;
+}
+
+.patient-container .left-panel {
+  width: 20%;
+  background-color: #2c3e50;
+  color: #ecf0f1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.patient-container .right-panel {
+  width: 80%;
+  background-color: #ecf0f1;
+  padding: 30px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.embedded-view .right-panel {
+  width: 100%;
+  padding: 0;
+  background-color: transparent;
 }
 
 .patient-action-buttons {
@@ -47,9 +80,10 @@ h1 {
   gap: 15px;
 }
 
-button {
+.patient-container button {
   padding: 12px 20px;
-  background: #3498db; /* Solid blue color */
+  background: #3498db;
+  /* Solid blue color */
   color: white;
   border: none;
   border-radius: 8px;
@@ -60,40 +94,41 @@ button {
   letter-spacing: 1px;
 }
 
-button:hover {
+.patient-container button:hover {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
-  background: #000000; /* Changes to black on hover */
+  background: #000000;
+  /* Changes to black on hover */
 }
 
-button:disabled {
+.patient-container button:disabled {
   background: #bdc3c7;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
-h2 {
+.patient-container h2 {
   color: #34495e;
   font-size: 1.8rem;
   margin-bottom: 20px;
   font-weight: 600;
 }
 
-form {
+.patient-container form {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-label {
+.patient-container label {
   font-weight: 600;
   color: #2c3e50;
   font-size: 1.1rem;
 }
 
-input,
-select {
+.patient-container input,
+.patient-container select {
   padding: 12px;
   border: 2px solid #dfe6e9;
   border-radius: 8px;
@@ -101,15 +136,15 @@ select {
   transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-input:focus,
-select:focus {
+.patient-container input:focus,
+.patient-container select:focus {
   border-color: #3498db;
   box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
   outline: none;
 }
 
-input:disabled,
-select:disabled {
+.patient-container input:disabled,
+.patient-container select:disabled {
   background-color: #ecf0f1;
   cursor: not-allowed;
   border-color: #bdc3c7;
@@ -169,7 +204,8 @@ select:disabled {
 }
 
 .patients-table th {
-  background: #3498db; /* Solid blue for table header */
+  background: #3498db;
+  /* Solid blue for table header */
   color: white;
   font-weight: 600;
   text-transform: uppercase;
@@ -195,13 +231,15 @@ select:disabled {
 
 .pagination-controls button {
   padding: 10px 15px;
-  background: #3498db; /* Solid blue for pagination buttons */
+  background: #3498db;
+  /* Solid blue for pagination buttons */
 }
 
 .pagination-controls button:hover {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
-  background: #000000; /* Changes to black on hover */
+  background: #000000;
+  /* Changes to black on hover */
 }
 
 .pagination-controls span {
@@ -212,9 +250,17 @@ select:disabled {
 
 /* Animation for Loading */
 @keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+
+  100% {
+    opacity: 1;
+  }
 }
 
 /* Responsive Design */

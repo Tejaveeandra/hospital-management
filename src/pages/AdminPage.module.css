@@ -1,20 +1,17 @@
 /* AdminPage.css */
 
 /* Allow page to scroll normally */
-body {
-  margin: 0;
-  height: auto;
-  overflow-y: auto;
-}
+/* Removed global body styles */
 
 /* Main container for the admin page */
 .admin-container {
-  max-width: 1200px;
+
   margin: 0 auto;
   padding: 20px;
   font-family: Arial, sans-serif;
   background-color: #f5f6fa;
-  min-height: 100vh; /* Ensures it covers full viewport if content is short */
+  min-height: 100vh;
+  /* Ensures it covers full viewport if content is short */
   display: flex;
   flex-direction: column;
 }
@@ -34,7 +31,8 @@ body {
   display: flex;
   gap: 20px;
   flex: 1;
-  flex-wrap: wrap; /* allow wrapping on smaller screens */
+  flex-wrap: wrap;
+  /* allow wrapping on smaller screens */
 }
 
 /* Sidebar */

@@ -8,13 +8,29 @@
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.form-container,
-.all-leaves-container {
+.form-container {
   margin-bottom: 2rem;
   padding: 1.5rem;
   background-color: #ffffff;
   border-radius: 12px;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+}
+
+.all-leaves-container {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Override for Embedded View */
+.embedded-view {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  box-shadow: none;
+  background-color: transparent;
 }
 
 h3 {
@@ -30,9 +46,9 @@ label {
   color: #444;
 }
 
-input,
-select {
-  width: 100%;
+.leave-management input,
+.leave-management select {
+
   padding: 0.5rem 0.75rem;
   margin-top: 0.3rem;
   border: 1px solid #ccc;
@@ -41,13 +57,13 @@ select {
   transition: border-color 0.3s;
 }
 
-input:focus,
-select:focus {
+.leave-management input:focus,
+.leave-management select:focus {
   border-color: #007bff;
   outline: none;
 }
 
-button {
+.leave-management button {
   margin-top: 1.2rem;
   padding: 0.6rem 1.5rem;
   background-color: #007bff;
@@ -59,11 +75,11 @@ button {
   transition: background-color 0.3s;
 }
 
-button:hover:enabled {
+.leave-management button:hover:enabled {
   background-color: #0056b3;
 }
 
-button:disabled {
+.leave-management button:disabled {
   background-color: #ccc;
   cursor: not-allowed;
 }
