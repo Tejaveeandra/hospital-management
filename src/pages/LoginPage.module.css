@@ -3,7 +3,9 @@
 
 .splitLayout {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
   font-family: 'Inter', sans-serif;
   background-color: #0b1120;
   color: #f1f5f9;
@@ -14,12 +16,14 @@
   flex: 1;
   position: relative;
   overflow: hidden;
+  height: 100%;
 }
 
 .illustration {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
   display: block;
 }
 
@@ -87,6 +91,8 @@
   justify-content: center;
   padding: 4rem;
   background-color: #0b1120;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .loginFormContainer {
@@ -209,14 +215,18 @@
 @media (max-width: 900px) {
   .splitLayout {
     flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
   }
 
   .leftPane {
-    height: 280px;
+    height: 35vh;
     flex: none;
   }
 
   .rightPane {
-    padding: 2.5rem 1.5rem;
+    flex: 1;
+    padding: 2rem 1.5rem;
+    overflow-y: auto;
   }
 }
