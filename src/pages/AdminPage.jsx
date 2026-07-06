@@ -19,6 +19,9 @@ const AdminPage = () => {
   const [prescriptionOperation, setPrescriptionOperation] = useState("List Prescriptions");
   const [medicineStoreOperation, setMedicineStoreOperation] = useState("List Medicine Store");
   const [hospitalChargesOperation, setHospitalChargesOperation] = useState("List Charges");
+  const isAdmin = ["admin", "super-admin", "ADMIN", "SUPER_ADMIN"].includes(userRole);
+
+  const handleLogout = () => {
     localStorage.removeItem('_raja_t');
     localStorage.removeItem('token');
     localStorage.removeItem('role');
