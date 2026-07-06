@@ -16,8 +16,8 @@ const Navbar = () => {
     setUsername(storedUsername);
   }, [location]);
 
-  // If the user is on the login page, don't render the navbar
-  if (location.pathname === '/' || !localStorage.getItem('_raja_t')) {
+  // If the user is on the login page or an admin page, don't render the global navbar
+  if (location.pathname === '/' || location.pathname === '/admin' || location.pathname === '/super-admin-dashboard' || !localStorage.getItem('_raja_t')) {
     return null;
   }
 
