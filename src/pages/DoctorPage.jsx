@@ -254,8 +254,10 @@ const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewA
 
   const userRole = localStorage.getItem("role") || "patient";
 
+  const isAdminRole = ["admin", "super-admin", "ADMIN", "SUPER_ADMIN"].includes(userRole);
+
   const fetchAllDoctors = useCallback(async (page = currentPage) => {
-    if (!["admin", "super-admin"].includes(userRole)) {
+    if (!isAdminRole) {
       setMessage("You do not have permission to view all doctors.");
       return;
     }
@@ -351,7 +353,7 @@ const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewA
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     setLoading(true);
-    if (operationMode === "create" && !["admin", "super-admin"].includes(userRole)) {
+    if (operationMode === "create" && !["admin", "super-admin", "ADMIN", "SUPER_ADMIN"].includes(userRole)) {
       setMessage("You do not have permission to create a doctor.");
       setLoading(false);
       return;
@@ -381,7 +383,7 @@ const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewA
       setMessage("Please enter a valid Doctor ID to delete");
       return;
     }
-    if (!["admin", "super-admin"].includes(userRole)) {
+    if (!["admin", "super-admin", "ADMIN", "SUPER_ADMIN"].includes(userRole)) {
       setMessage("You do not have permission to delete a doctor.");
       return;
     }
@@ -430,7 +432,7 @@ const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewA
           <div className={styles['left-panel']}>
             <div className={styles['doctor-action-buttons']}>
               <h3>Doctor Operations</h3>
-              {allowedOperations.includes("create") && ["admin", "super-admin"].includes(userRole) && (
+              {allowedOperations.includes("create") && ["admin", "super-admin", "ADMIN", "SUPER_ADMIN"].includes(userRole) && (
                 <button onClick={() => handleOperation("create")} disabled={loading}>
                   Create New Doctor
                 </button>
@@ -445,12 +447,12 @@ const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewA
                   Update Doctor
                 </button>
               )}
-              {allowedOperations.includes("viewAll") && ["admin", "super-admin"].includes(userRole) && (
+              {allowedOperations.includes("viewAll") && ["admin", "super-admin", "ADMIN", "SUPER_ADMIN"].includes(userRole) && (
                 <button onClick={() => handleOperation("viewAll")} disabled={loading}>
                   View All Doctors
                 </button>
               )}
-              {allowedOperations.includes("delete") && ["admin", "super-admin"].includes(userRole) && (
+              {allowedOperations.includes("delete") && ["admin", "super-admin", "ADMIN", "SUPER_ADMIN"].includes(userRole) && (
                 <button onClick={() => handleOperation("delete")} disabled={loading}>
                   Delete Doctor
                 </button>
