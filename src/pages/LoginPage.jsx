@@ -98,11 +98,6 @@ const Login = () => {
             </div>
           </div>
         </div>
-        <img
-          src={loginIllustration}
-          alt="Medical technology illustration"
-          className={styles.illustration}
-        />
       </div>
 
       {/* RIGHT SIDE: Login Form */}
