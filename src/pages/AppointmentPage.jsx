@@ -20,24 +20,22 @@ const AppointmentManagement = ({ allowedOperations, doctorId, operationMode, use
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [appointments, setAppointments] = useState([]);
+  const [hospitalCharges, setHospitalCharges] = useState([]);
   const [appointmentCount, setAppointmentCount] = useState(0);
   const [createdAppointment, setCreatedAppointment] = useState(null);
   const [user] = useState(() => {
     if (propUser) return propUser;
     const role = localStorage.getItem("role");
-    // Some pages use 'userId', some use 'id'. Check both.
     const id = localStorage.getItem("userId") || localStorage.getItem("id");
     return role ? { role, id } : null;
   });
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
 
-  // Use the prop-based operationMode if provided, otherwise fall back to the first allowed operation
   const [internalOperationMode, setInternalOperationMode] = useState(
     operationMode || allowedOperations[0] || "View Appointment by ID"
   );
 
-  // Reset state when operationMode prop changes to a different operation
   useEffect(() => {
     if (operationMode && allowedOperations.includes(operationMode) && operationMode !== internalOperationMode) {
       setInternalOperationMode(operationMode);
@@ -60,30 +58,6 @@ const AppointmentManagement = ({ allowedOperations, doctorId, operationMode, use
     }
   }, [operationMode, allowedOperations, internalOperationMode, user?.role]);
 
-  // Role-based operations mapping
-  const roleOperations = {
-    patient: ["Create Appointment", "View Appointment by ID", "Reschedule Appointment", "Cancel Appointment"],
-    doctor: [
-      "View Appointment by ID",
-      "Update Appointment",
-      "Reschedule Appointment",
-      "Cancel Appointment",
-      "View Appointments by Doctor and Date",
-      "Get Appointment Count by Doctor and Date",
-    ],
-    admin: [
-      "Create Appointment",
-      "View Appointment by ID",
-      "View All Appointments",
-      "Update Appointment",
-      "Reschedule Appointment",
-      "Cancel Appointment",
-      "View Appointments by Doctor and Date",
-      "Get Appointment Count by Doctor and Date",
-    ],
-  };
-
-  // Set initial user-specific settings
   useEffect(() => {
     if (user?.role === "patient") {
       setFormData((prev) => ({ ...prev, patientId: user.id }));
@@ -92,17 +66,38 @@ const AppointmentManagement = ({ allowedOperations, doctorId, operationMode, use
     }
   }, [user]);
 
-  // Clear message when operation mode changes internally
   useEffect(() => {
     setMessage("");
   }, [internalOperationMode]);
 
-  // Fetch all appointments when viewing all (only for Admin)
   useEffect(() => {
     if (internalOperationMode === "View All Appointments" && allowedOperations.includes("View All Appointments")) {
       fetchAllAppointments();
     }
   }, [internalOperationMode, allowedOperations]);
+
+  const fetchHospitalCharges = async () => {
+    try {
+      const res = await api.get("/api/hospital-charges/list");
+      setHospitalCharges(Array.isArray(res.data) ? res.data : []);
+    } catch (e) {
+      console.error("Error fetching hospital charges:", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchHospitalCharges();
+  }, []);
+
+  const getAppointmentCharge = (appointment) => {
+    if (!appointment) {
+      return 500;
+    }
+    const isEmergency = appointment.isEmergency || appointment.emergency;
+    const chargeName = isEmergency ? "EMERGENCY_CONSULTATION" : "GENERAL_CONSULTATION";
+    const charge = hospitalCharges.find(c => (c.chargeName === chargeName || c.name === chargeName));
+    return charge ? charge.amount : 500;
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -150,9 +145,10 @@ const AppointmentManagement = ({ allowedOperations, doctorId, operationMode, use
       const newAppointment = response.data;
       setMessage(`Appointment created: ID ${newAppointment.appointmentId}`);
       if (user?.role === "patient" || user?.role === "admin") {
+        const amount = getAppointmentCharge(newAppointment);
         setSelectedAppointment({
           appointmentId: newAppointment.appointmentId,
-          amount: 500 // Default or fetched from backend if available
+          amount
         });
         setShowPaymentModal(true);
       }
@@ -313,10 +309,9 @@ const AppointmentManagement = ({ allowedOperations, doctorId, operationMode, use
         }
       );
       setMessage(`Appointment ID ${formData.appointmentId} rescheduled.`);
-      // Keep form state to retain the form in the UI
       setFormData({
         ...formData,
-        newAppointmentDate: new Date().toISOString().split("T")[0], // Reset only date and time
+        newAppointmentDate: new Date().toISOString().split("T")[0],
         newTimeSlot: "",
       });
       if (allowedOperations.includes("View All Appointments")) fetchAllAppointments();
@@ -448,18 +443,17 @@ const AppointmentManagement = ({ allowedOperations, doctorId, operationMode, use
               <label>Payment Status:</label>
               <input
                 type="text"
-                value={createdAppointment.isPaid ? "Paid" : "Unpaid"}
-                className={createdAppointment.isPaid ? styles['status-paid-input'] : styles['status-unpaid-input']}
+                value={(createdAppointment.isPaid || createdAppointment.is_paid || createdAppointment.paid) ? "Paid" : "Unpaid"}
+                className={(createdAppointment.isPaid || createdAppointment.is_paid || createdAppointment.paid) ? styles['status-paid-input'] : styles['status-unpaid-input']}
                 disabled
               />
-              {/* <label>Preferred Doctor:</label> */}
-              {/* <input type="text" value={createdAppointment.isPreferredDoctor ? "Yes" : "No"} disabled /> */}
               <div className={styles['action-buttons']}>
                 <button onClick={resetForm} disabled={loading}>Create New Appointment</button>
-                {(user?.role === "patient" || user?.role === "admin") && !createdAppointment.isPaid && (
+                {(user?.role === "patient" || user?.role === "admin") && !(createdAppointment.isPaid || createdAppointment.is_paid || createdAppointment.paid) && (
                   <button
                     onClick={() => {
-                      setSelectedAppointment({ appointmentId: createdAppointment.appointmentId, amount: 500 });
+                      const amount = getAppointmentCharge(createdAppointment);
+                      setSelectedAppointment({ appointmentId: createdAppointment.appointmentId, amount });
                       setShowPaymentModal(true);
                     }}
                     className={styles['pay-btn']}
@@ -567,7 +561,6 @@ const AppointmentManagement = ({ allowedOperations, doctorId, operationMode, use
                     <th>Date</th>
                     <th>Time Slot</th>
                     <th>Emergency</th>
-                    {/* <th>Preferred Doctor</th> */}
                     <th>Payment Status</th>
                     {(user?.role === 'patient' || user?.role === 'admin') && <th>Action</th>}
                   </tr>
@@ -583,19 +576,19 @@ const AppointmentManagement = ({ allowedOperations, doctorId, operationMode, use
                       <td>{appointment.doctorName}</td>
                       <td>{appointment.appointmentDate}</td>
                       <td>{appointment.timeSlot}</td>
-                      <td>{appointment.isEmergency ? "Yes" : "No"}</td>
-                      {/* <td>{appointment.isPreferredDoctor ? "Yes" : "No"}</td> */}
+                      <td>{appointment.isEmergency || appointment.emergency ? "Yes" : "No"}</td>
                       <td>
-                        <span className={appointment.isPaid ? styles['status-paid'] : styles['status-unpaid']}>
-                          {appointment.isPaid ? "Paid" : "Unpaid"}
+                        <span className={(appointment.isPaid || appointment.is_paid || appointment.paid) ? styles['status-paid'] : styles['status-unpaid']}>
+                          {(appointment.isPaid || appointment.is_paid || appointment.paid) ? "Paid" : "Unpaid"}
                         </span>
                       </td>
                       {(user?.role === 'patient' || user?.role === 'admin') && (
                         <td>
-                          {!appointment.isPaid && (
+                          {!(appointment.isPaid || appointment.is_paid || appointment.paid) && (
                             <button
                               onClick={() => {
-                                setSelectedAppointment({ appointmentId: appointment.appointmentId, amount: 500 });
+                                const amount = getAppointmentCharge(appointment);
+                                setSelectedAppointment({ appointmentId: appointment.appointmentId, amount });
                                 setShowPaymentModal(true);
                               }}
                               className={styles['pay-button-table']}
@@ -630,7 +623,6 @@ const AppointmentManagement = ({ allowedOperations, doctorId, operationMode, use
                   <th>Date</th>
                   <th>Time Slot</th>
                   <th>Emergency</th>
-                  {/* <th>Preferred Doctor</th> */}
                   <th>Payment Status</th>
                   {(user?.role === 'patient' || user?.role === 'admin') && <th>Action</th>}
                 </tr>
@@ -646,19 +638,19 @@ const AppointmentManagement = ({ allowedOperations, doctorId, operationMode, use
                     <td>{appointment.doctorName}</td>
                     <td>{appointment.appointmentDate}</td>
                     <td>{appointment.timeSlot}</td>
-                    <td>{appointment.isEmergency ? "Yes" : "No"}</td>
-                    {/* <td>{appointment.isPreferredDoctor ? "Yes" : "No"}</td> */}
+                    <td>{appointment.isEmergency || appointment.emergency ? "Yes" : "No"}</td>
                     <td>
-                      <span className={appointment.isPaid ? styles['status-paid'] : styles['status-unpaid']}>
-                        {appointment.isPaid ? "Paid" : "Unpaid"}
+                      <span className={(appointment.isPaid || appointment.is_paid || appointment.paid) ? styles['status-paid'] : styles['status-unpaid']}>
+                        {(appointment.isPaid || appointment.is_paid || appointment.paid) ? "Paid" : "Unpaid"}
                       </span>
                     </td>
                     {(user?.role === 'patient' || user?.role === 'admin') && (
                       <td>
-                        {!appointment.isPaid && (
+                        {!(appointment.isPaid || appointment.is_paid || appointment.paid) && (
                           <button
                             onClick={() => {
-                              setSelectedAppointment({ appointmentId: appointment.appointmentId, amount: 500 });
+                              const amount = getAppointmentCharge(appointment);
+                              setSelectedAppointment({ appointmentId: appointment.appointmentId, amount });
                               setShowPaymentModal(true);
                             }}
                             className={styles['pay-button-table']}
@@ -847,12 +839,9 @@ const AppointmentManagement = ({ allowedOperations, doctorId, operationMode, use
                     <td>{appointment.doctorName}</td>
                     <td>{appointment.appointmentDate}</td>
                     <td>{appointment.timeSlot}</td>
-                    <td>{appointment.isEmergency ? "Yes" : "No"}</td>
+                    <td>{appointment.isEmergency || appointment.emergency ? "Yes" : "No"}</td>
                     <td>{appointment.isPreferredDoctor ? "Yes" : "No"}</td>
                     <td>
-                      <span className={appointment.isPaid ? styles['status-paid'] : styles['status-unpaid']}>
-                        {appointment.isPaid ? "Paid" : "Unpaid"}
-                      </span>
                     </td>
                     {(user?.role === 'patient' || user?.role === 'admin') && (
                       <td>

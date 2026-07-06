@@ -72,7 +72,7 @@ const LeaveManagement = ({ allowedOperations, doctorId, isEmbedded = false }) =>
         endTime: formData.leaveType === "HALF_DAY" ? formData.endTime : undefined,
       };
       console.log("Submitting payload:", payload); // Debug log
-      const response = await api.post("/doctor-leaves/addLeave", payload);
+      const response = await api.post("/api/doctor-leaves/addLeave", payload);
       setMessage(`Leave created: ID ${response.data.leaveId}`);
       setFormData({
         doctorId: doctorId || "",
@@ -98,7 +98,7 @@ const LeaveManagement = ({ allowedOperations, doctorId, isEmbedded = false }) =>
     }
     setLoading(true);
     try {
-      const response = await api.get(`/doctor-leaves/doctorLeave/${viewDoctorId}`);
+      const response = await api.get(`/api/doctor-leaves/doctorLeave/${viewDoctorId}`);
       setLeaves(response.data);
       setMessage(`Leaves for Doctor ID: ${viewDoctorId}`);
     } catch (error) {
@@ -111,7 +111,7 @@ const LeaveManagement = ({ allowedOperations, doctorId, isEmbedded = false }) =>
   const fetchAllLeaves = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/doctor-leaves");
+      const response = await api.get("/api/doctor-leaves");
       setLeaves(response.data);
       setMessage("All leaves fetched.");
     } catch (error) {
@@ -124,7 +124,7 @@ const LeaveManagement = ({ allowedOperations, doctorId, isEmbedded = false }) =>
   const fetchPendingLeaves = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/doctor-leaves/doctor-leave/pending");
+      const response = await api.get("/api/doctor-leaves/doctor-leave/pending");
       setLeaves(response.data);
       setMessage("Pending leaves fetched.");
     } catch (error) {
@@ -141,7 +141,7 @@ const LeaveManagement = ({ allowedOperations, doctorId, isEmbedded = false }) =>
     }
     setLoading(true);
     try {
-      await api.put(`/doctor-leaves/doctor-leave/${leaveId}/status`, null, {
+      await api.put(`/api/doctor-leaves/doctor-leave/${leaveId}/status`, null, {
         params: { status },
       });
       setMessage(`Leave ID ${leaveId} updated to ${status}`);
@@ -160,7 +160,7 @@ const LeaveManagement = ({ allowedOperations, doctorId, isEmbedded = false }) =>
     }
     setLoading(true);
     try {
-      await api.delete(`/doctor-leaves/${leaveId}`);
+      await api.delete(`/api/doctor-leaves/${leaveId}`);
       setMessage(`Leave ID ${leaveId} deleted`);
       setLeaveId("");
       if (allowedOperations.includes("View All Leaves")) fetchAllLeaves();
@@ -327,4 +327,4 @@ const LeaveManagement = ({ allowedOperations, doctorId, isEmbedded = false }) =>
   );
 };
 
-export default LeaveManagement;
+export default LeaveManagement;

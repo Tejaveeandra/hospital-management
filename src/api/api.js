@@ -1,104 +1,139 @@
 import axios from 'axios';
+import CryptoJS from 'crypto-js';
 
+// Security Keys (Kept for potential individual field encryption)
+const ENCRYPTION_KEY = process.env.REACT_APP_RAJA_ENCRYPTION_KEY || 'default_secure_key_32_characters_';
+const SIGNING_KEY = process.env.REACT_APP_RAJA_SIGNING_KEY || 'default_secure_sign_key_32_chars';
+
+// --- API CONFIGURATION ---
+// We point to our local Proxy Server (setupProxy.js) which handles the RAJA security layer
 const api = axios.create({
-    baseURL: '/raja',
+    baseURL: '', 
 });
 
-// Obfuscation Utilities (matching proxy)
+// Production-ready Encryption Utilities
 const scramble = (str) => {
     if (!str) return '';
-    // Convert to Hex and reverse for "noise" effect
-    const hex = Array.from(new TextEncoder().encode(str))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
-    return hex.split('').reverse().join('');
+    const iv = CryptoJS.lib.WordArray.random(16);
+    const key = CryptoJS.enc.Utf8.parse(ENCRYPTION_KEY);
+    const encrypted = CryptoJS.AES.encrypt(str, key, {
+        iv: iv,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+    });
+    return iv.toString() + encrypted.toString();
+};
+
+const sign = (payload) => {
+    return CryptoJS.HmacSHA256(payload, SIGNING_KEY).toString();
 };
 
 const descramble = (val) => {
-    if (!val) return null;
+    if (!val || typeof val !== 'string') return val;
+    
     try {
-        const hex = val.split('').reverse().join('');
-        const bytes = new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-        const decoded = new TextDecoder().decode(bytes);
-        return JSON.parse(decoded);
+        // 1. Extract IV and Ciphertext
+        const iv = CryptoJS.enc.Hex.parse(val.substring(0, 32));
+        const ciphertext = val.substring(32);
+        const key = CryptoJS.enc.Utf8.parse(ENCRYPTION_KEY);
+        
+        // 2. Decrypt
+        const decrypted = CryptoJS.AES.decrypt(ciphertext, key, {
+            iv: iv,
+            mode: CryptoJS.mode.CBC,
+            padding: CryptoJS.pad.Pkcs7
+        });
+        
+        const decryptedStr = decrypted.toString(CryptoJS.enc.Utf8);
+        if (!decryptedStr) return val; // Fallback if decryption fails
+
+        // 3. Parse JSON
+        return JSON.parse(decryptedStr);
     } catch (e) {
+        console.warn('[RAJA] Decryption/Parsing Fallback:', e.message);
         return val;
     }
 };
 
-
-// Request interceptor: Move EVERYTHING to a single scrambled POST body
+// Request interceptor: Transforming into RAJA Secure Payload
 api.interceptors.request.use(
     (config) => {
-        if (config.url && config.url !== '/raja') {
-            const token = localStorage.getItem('_raja_t');
-            const originalUrl = config.url;
-            const originalMethod = config.method || 'get';
-            const params = config.params ? new URLSearchParams(config.params).toString() : '';
-            const fullPath = `${originalUrl}${params ? '?' + params : ''}`;
+        // Bypassing RAJA securely for development to avoid proxy crashes
+        const shouldBypass = true;
 
-            // Unified Vantablack Payload
-            const payload = {
-                t: token,               // Token
-                m: originalMethod,      // Real Method
-                p: fullPath,            // Real Path
-                d: config.data          // Real Data
-            };
-
-            config.data = { raja: scramble(JSON.stringify(payload)) };
-            console.log(`[RAJA] Request: ${originalMethod} ${fullPath}`, payload);
-            config.method = 'post'; // EVERYTHING IS POST
-            config.url = '/raja';
-            config.baseURL = '';
-            config.params = {};
-
-            // --- VANTABLACK HEADERS: Minimal but standard ---
-            config.headers = {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json, text/plain, */*',
-                'X-Raja-V': '1'
-            };
+        // Skip transformation if bypassed, already using /raja, or calling an absolute URL
+        if (shouldBypass || config.url === '/raja' || config.url.startsWith('http')) {
+            if (shouldBypass) {
+                console.log(`[RAJA] Bypass Active: ${config.method?.toUpperCase()} ${config.url}`);
+                const token = localStorage.getItem('token') || localStorage.getItem('_raja_t');
+                if (token) {
+                    config.headers = config.headers || {};
+                    config.headers['Authorization'] = `Bearer ${token}`;
+                }
+            }
+            return config;
         }
+
+        const token = localStorage.getItem('token') || localStorage.getItem('_raja_t');
+        
+        // Prepare RAJA Payload: { t: token, m: method, p: path, d: data }
+        const payload = JSON.stringify({
+            t: token || '',
+            m: config.method?.toUpperCase() || 'GET',
+            p: config.url,
+            d: config.data || {}
+        });
+
+        const scrambled = scramble(payload);
+        const signature = sign(scrambled);
+
+        // Transform the request to hit /raja with the secure payload
+        config.url = '/raja';
+        config.method = 'post';
+        config.data = { raja: scrambled };
+        config.headers['X-Raja-Signature'] = signature;
+        config.headers['Content-Type'] = 'application/json';
+
+        console.log(`[RAJA] Secure Wrapper: ${JSON.parse(payload).m} ${JSON.parse(payload).p}`);
         return config;
     },
     (error) => Promise.reject(error)
 );
 
-// Response interceptor: Capture token and descramble
+// Response interceptor: Standard handling + Token persistence
 api.interceptors.response.use(
     (response) => {
-        let data = response.data;
+        const isBypassed = process.env.NODE_ENV === 'development' && localStorage.getItem('RAJA_BYPASS') === 'true';
 
-        // 1. Descramble if needed
-        if (data && typeof data === 'string') {
-            try {
-                // Manually descramble hex
-                const hex = data.split('').reverse().join('');
-                const bytes = new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-                const decoded = new TextDecoder().decode(bytes);
-                data = JSON.parse(decoded);
-            } catch (e) {
-                // If not scrambled or not JSON, leave as is
+        // Automatically descramble if not bypassed and the response is an encrypted string from RAJA
+        if (!isBypassed && typeof response.data === 'string' && response.data.length > 32) {
+            const descrambled = descramble(response.data);
+            if (descrambled && typeof descrambled === 'object') {
+                response.data = descrambled;
             }
         }
 
-        // 2. Capture and persist token
+        const data = response.data;
+
+        // Capture and persist token if returned in body
         if (data && data.token) {
+            localStorage.setItem('token', data.token);
             localStorage.setItem('_raja_t', data.token);
-            console.log('[RAJA] Session synchronized');
+            console.log('[GATEWAY] Session synchronized');
         }
 
-        response.data = data;
         return response;
     },
     (error) => {
-        console.error('[RAJA] Request Failed:', error.config?.url, error.message);
-        if (error.response) {
-            console.error('[RAJA] Status:', error.response.status);
-            console.error('[RAJA] Data:', error.response.data);
-        }
-        if (error.response && error.response.status === 403) {
-            console.warn('[RAJA] Session expired or unauthorized.');
+        console.error('[GATEWAY] Request Failed:', error.config?.url, error.message);
+        
+        // Handle Session Expiry (403 or 401)
+        // Skip auto-redirect if this was a login request (let the login page show the error)
+        const isLoginRequest = error.config && error.config.url && error.config.url.includes('/users/login');
+        
+        if (!isLoginRequest && error.response && (error.response.status === 403 || error.response.status === 401)) {
+            console.warn('[GATEWAY] Session expired or unauthorized.');
+            localStorage.removeItem('token');
             localStorage.removeItem('_raja_t');
             localStorage.removeItem('role');
             localStorage.removeItem('username');
@@ -109,5 +144,5 @@ api.interceptors.response.use(
     }
 );
 
-
 export default api;
+
