@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   LayoutDashboard, 
   Users, 
@@ -9,11 +9,75 @@ import {
   Receipt, 
   FileText,
   LogOut,
-  ShieldPlus
+  ShieldPlus,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import styles from './Sidebar.module.css';
 
-const Sidebar = ({ activeSection, setActiveSection, userRole, handleLogout }) => {
+const Sidebar = ({ activeSection, setActiveSection, userRole, handleLogout, setSpecificOperation }) => {
+  const [expandedMenus, setExpandedMenus] = useState({});
+
+  const toggleMenu = (menu) => {
+    setExpandedMenus(prev => ({ ...prev, [menu]: !prev[menu] }));
+  };
+
+  const handleNavClick = (section, operation = null) => {
+    setActiveSection(section);
+    if (setSpecificOperation) {
+      setSpecificOperation(operation);
+    }
+  };
+
+  const NavItem = ({ section, icon: Icon, label, subItems }) => {
+    const isExpanded = expandedMenus[section];
+    const isActive = activeSection === section;
+
+    if (!subItems) {
+      return (
+        <button 
+          className={`${styles.navItem} ${isActive ? styles.active : ''}`}
+          onClick={() => handleNavClick(section)}
+        >
+          <Icon size={20} />
+          <span>{label}</span>
+        </button>
+      );
+    }
+
+    return (
+      <div className={styles.navItemContainer}>
+        <button 
+          className={`${styles.navItem} ${isActive && !isExpanded ? styles.active : ''}`}
+          onClick={() => {
+            toggleMenu(section);
+            if (!isExpanded) handleNavClick(section, subItems[0].operation);
+          }}
+        >
+          <div className={styles.navItemMain}>
+            <Icon size={20} />
+            <span>{label}</span>
+          </div>
+          {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+        </button>
+        
+        {isExpanded && (
+          <div className={styles.subMenu}>
+            {subItems.map((item, idx) => (
+              <button
+                key={idx}
+                className={styles.subMenuItem}
+                onClick={() => handleNavClick(section, item.operation)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <aside className={styles.sidebar}>
       <div className={styles.sidebarHeader}>
@@ -40,102 +104,100 @@ const Sidebar = ({ activeSection, setActiveSection, userRole, handleLogout }) =>
 
       <nav className={styles.sidebarNav}>
         <div className={styles.navGroup}>
-          <button 
-            className={`${styles.navItem} ${activeSection === 'dashboard' ? styles.active : ''}`}
-            onClick={() => setActiveSection('dashboard')}
-          >
-            <LayoutDashboard size={20} />
-            <span>Dashboard</span>
-          </button>
+          <NavItem section="dashboard" icon={LayoutDashboard} label="Dashboard" />
         </div>
 
         <div className={styles.navGroup}>
           <span className={styles.groupLabel}>SYSTEM</span>
-          <button 
-            className={`${styles.navItem} ${activeSection === 'audit' ? styles.active : ''}`}
-            onClick={() => setActiveSection('audit')}
-          >
-            <Activity size={20} />
-            <span>Audit Logs</span>
-          </button>
-          <button 
-            className={`${styles.navItem} ${activeSection === 'settings' ? styles.active : ''}`}
-            onClick={() => setActiveSection('settings')}
-          >
-            <Users size={20} /> {/* Placeholder for settings icon */}
-            <span>System Settings</span>
-          </button>
+          <NavItem section="audit" icon={Activity} label="Audit Logs" />
+          <NavItem section="settings" icon={Users} label="System Settings" />
         </div>
 
         <div className={styles.navGroup}>
           <span className={styles.groupLabel}>OPERATIONS</span>
-          <button 
-            className={`${styles.navItem} ${activeSection === 'users' ? styles.active : ''}`}
-            onClick={() => setActiveSection('users')}
-          >
-            <Users size={20} />
-            <span>User Management</span>
-          </button>
-          <button 
-            className={`${styles.navItem} ${activeSection === 'patients' ? styles.active : ''}`}
-            onClick={() => setActiveSection('patients')}
-          >
-            <Activity size={20} />
-            <span>Patients</span>
-          </button>
-          <button 
-            className={`${styles.navItem} ${activeSection === 'doctors' ? styles.active : ''}`}
-            onClick={() => setActiveSection('doctors')}
-          >
-            <Stethoscope size={20} />
-            <span>Doctors & HR</span>
-          </button>
-          <button 
-            className={`${styles.navItem} ${activeSection === 'appointments' ? styles.active : ''}`}
-            onClick={() => setActiveSection('appointments')}
-          >
-            <Calendar size={20} />
-            <span>Appointments</span>
-          </button>
-          <button 
-            className={`${styles.navItem} ${activeSection === 'departments' ? styles.active : ''}`}
-            onClick={() => setActiveSection('departments')}
-          >
-             <LayoutDashboard size={20} />
-            <span>Departments</span>
-          </button>
-          <button 
-            className={`${styles.navItem} ${activeSection === 'leaves' ? styles.active : ''}`}
-            onClick={() => setActiveSection('leaves')}
-          >
-             <Calendar size={20} />
-            <span>Leaves</span>
-          </button>
-          <button 
-            className={`${styles.navItem} ${activeSection === 'medicineStore' ? styles.active : ''}`}
-            onClick={() => setActiveSection('medicineStore')}
-          >
-            <Pill size={20} />
-            <span>Pharmacy</span>
-          </button>
+          <NavItem section="users" icon={Users} label="User Management" />
+          <NavItem section="patients" icon={Activity} label="Patients" />
+          
+          <NavItem 
+            section="doctors" 
+            icon={Stethoscope} 
+            label="Doctor Operations" 
+            subItems={[
+              { label: 'Create Doctor', operation: 'create' },
+              { label: 'View All Doctors', operation: 'viewAll' },
+              { label: 'Delete Doctor', operation: 'delete' }
+            ]}
+          />
+          
+          <NavItem 
+            section="appointments" 
+            icon={Calendar} 
+            label="Appointments" 
+            subItems={[
+              { label: 'Create Appointment', operation: 'Create Appointment' },
+              { label: 'View All', operation: 'View All Appointments' },
+              { label: 'Update', operation: 'Update Appointment' },
+              { label: 'Cancel', operation: 'Cancel Appointment' }
+            ]}
+          />
+          
+          <NavItem 
+            section="departments" 
+            icon={LayoutDashboard} 
+            label="Departments" 
+            subItems={[
+              { label: 'View All', operation: 'List Departments' },
+              { label: 'Add Department', operation: 'Add Department' },
+              { label: 'Update', operation: 'Update Department' },
+              { label: 'Doctors by Dept', operation: 'Doctors by Department' }
+            ]}
+          />
+          
+          <NavItem 
+            section="leaves" 
+            icon={Calendar} 
+            label="Leave Operations" 
+            subItems={[
+              { label: 'View All', operation: 'View All Leaves' },
+              { label: 'View Pending', operation: 'View Pending Leaves' },
+              { label: 'Update Status', operation: 'Update Leave Status' }
+            ]}
+          />
+          
+          <NavItem 
+            section="medicineStore" 
+            icon={Pill} 
+            label="Pharmacy" 
+            subItems={[
+              { label: 'View Store', operation: 'List Medicine Store' },
+              { label: 'Add to Store', operation: 'Add to Store' },
+              { label: 'Remove', operation: 'Delete from Store' }
+            ]}
+          />
         </div>
 
         <div className={styles.navGroup}>
           <span className={styles.groupLabel}>FINANCE</span>
-          <button 
-            className={`${styles.navItem} ${activeSection === 'hospitalCharges' ? styles.active : ''}`}
-            onClick={() => setActiveSection('hospitalCharges')}
-          >
-            <Receipt size={20} />
-            <span>Billing</span>
-          </button>
-          <button 
-            className={`${styles.navItem} ${activeSection === 'prescriptions' ? styles.active : ''}`}
-            onClick={() => setActiveSection('prescriptions')}
-          >
-            <FileText size={20} />
-            <span>Prescriptions</span>
-          </button>
+          <NavItem 
+            section="hospitalCharges" 
+            icon={Receipt} 
+            label="Billing" 
+            subItems={[
+              { label: 'View Charges', operation: 'List Charges' },
+              { label: 'Update Charge', operation: 'Update Charge' }
+            ]}
+          />
+          
+          <NavItem 
+            section="prescriptions" 
+            icon={FileText} 
+            label="Prescriptions" 
+            subItems={[
+              { label: 'View All', operation: 'List Prescriptions' },
+              { label: 'Create', operation: 'Create Prescription' },
+              { label: 'Update', operation: 'Update Prescription' }
+            ]}
+          />
         </div>
       </nav>
 
