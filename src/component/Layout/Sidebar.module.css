@@ -1,0 +1,148 @@
+.sidebar {
+  width: 250px;
+  background-color: #1a1e2d;
+  color: #a0a5b1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.sidebarHeader {
+  padding: 20px;
+  border-bottom: 1px solid #2d3243;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.logoIcon {
+  background-color: #3b82f6;
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logoText h2 {
+  color: #ffffff;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.logoText p {
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+.roleCard {
+  background-color: #f3f0ff;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.roleIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.roleInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.roleName {
+  color: #7b5be4;
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.roleDesc {
+  color: #9ca3af;
+  font-size: 0.75rem;
+}
+
+.sidebarNav {
+  padding: 20px 10px;
+  flex: 1;
+}
+
+.navGroup {
+  margin-bottom: 24px;
+}
+
+.groupLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  padding: 0 10px;
+  display: block;
+  letter-spacing: 0.05em;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  color: #a0a5b1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+  text-align: left;
+  margin-bottom: 4px;
+}
+
+.navItem:hover {
+  background-color: #2d3243;
+  color: #ffffff;
+}
+
+.navItem.active {
+  background-color: #3b82f6;
+  color: #ffffff;
+}
+
+.sidebarFooter {
+  padding: 20px;
+  border-top: 1px solid #2d3243;
+}
+
+.logoutBtn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  color: #a0a5b1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.logoutBtn:hover {
+  color: #ffffff;
+  background-color: #2d3243;
+}
