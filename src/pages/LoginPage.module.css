@@ -17,7 +17,6 @@
   position: relative;
   overflow: hidden;
   height: 100%;
-  background-image: url('/login-illustration.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -88,7 +87,6 @@
   padding: 4rem;
   height: 100%;
   overflow-y: auto;
-  background-image: url('/login-right-bg.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

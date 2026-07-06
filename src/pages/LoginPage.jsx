@@ -86,7 +86,10 @@ const Login = () => {
   return (
     <div className={styles.splitLayout}>
       {/* LEFT SIDE: Illustration */}
-      <div className={styles.leftPane}>
+      <div
+        className={styles.leftPane}
+        style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/login-illustration.png)` }}
+      >
         <div className={styles.illustrationOverlay}>
           <div className={styles.brandBadge}>
             <div className={styles.logoWrapper}>
@@ -101,7 +104,10 @@ const Login = () => {
       </div>
 
       {/* RIGHT SIDE: Login Form */}
-      <div className={styles.rightPane}>
+      <div
+        className={styles.rightPane}
+        style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/login-right-bg.png)` }}
+      >
         <div className={styles.loginFormContainer}>
           <div className={styles.welcomeText}>
             <h2>Welcome back</h2>
