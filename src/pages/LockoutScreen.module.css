@@ -1,0 +1,429 @@
+/* ═══════════════════════════════════════════════
+   LockoutScreen — all styles
+═══════════════════════════════════════════════ */
+
+/* ─── Keyframes ─────────────────────────────── */
+@keyframes lkPing     { 0%  { opacity: .55; transform: scale(.85); }  100% { opacity: 0;   transform: scale(1.7); } }
+@keyframes lkFloatUp  { 0%  { transform: translateY(0) rotate(0deg); } 100% { transform: translateY(-14px) rotate(8deg); } }
+@keyframes lkEcgDrift { 0%  { transform: translateX(0); }              100% { transform: translateX(-200px); } }
+@keyframes lkRadar    { 0%  { transform: rotate(0deg); }               100% { transform: rotate(360deg); } }
+@keyframes lkPulse    { 0%, 100% { opacity: 1; }                       50%  { opacity: .25; } }
+@keyframes lkTicker   { 0%  { transform: translateX(0); }              100% { transform: translateX(-50%); } }
+
+/* ─── Root wrapper ──────────────────────────── */
+.lockWrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  user-select: none;
+  background: linear-gradient(160deg, #060d1a 0%, #0b1830 45%, #060d1a 100%);
+}
+
+/* ─── Scanline overlay ──────────────────────── */
+.scanline {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  opacity: 0.025;
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.5) 0px,
+    rgba(255, 255, 255, 0.5) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+/* ─── Radial colour glow ────────────────────── */
+.radialGlow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 55% 55% at 50% 50%, rgba(var(--lk-rgb), 0.06) 0%, transparent 70%);
+  transition: background 0.8s ease;
+}
+
+/* ─── Hex grid ──────────────────────────────── */
+.hexGrid {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.035;
+}
+
+/* ─── Floating medical crosses ──────────────── */
+.crossParticle {
+  position: absolute;
+  pointer-events: none;
+  animation: lkFloatUp 7s ease-in-out infinite alternate;
+}
+
+/* ─── ECG lines ─────────────────────────────── */
+.ecgMid {
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  overflow: hidden;
+  top: 50%;
+  margin-top: 168px;
+  height: 64px;
+}
+
+.ecgMidSvg {
+  animation: lkEcgDrift 2.8s linear infinite;
+}
+
+.ecgTop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  overflow: hidden;
+  height: 48px;
+  opacity: 0.3;
+}
+
+.ecgTopSvg {
+  animation: lkEcgDrift 3.5s linear infinite reverse;
+}
+
+/* ─── Centre card ───────────────────────────── */
+.centerCard {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(6, 13, 26, 0.88);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 28px;
+  padding: 36px 44px 32px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 0 120px rgba(var(--lk-rgb), 0.08),
+    0 40px 80px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  min-width: 320px;
+  transition: box-shadow 0.8s ease;
+}
+
+/* ─── Logo bar ──────────────────────────────── */
+.logoBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.logoIconBox {
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(37, 99, 235, 0.18);
+  border: 1px solid rgba(37, 99, 235, 0.3);
+}
+
+.brandName {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin: 0;
+}
+
+.brandVersion {
+  font-size: 11px;
+  color: #1e3a8a;
+  font-family: 'JetBrains Mono', monospace;
+  margin: 0;
+}
+
+/* ─── Ring ──────────────────────────────────── */
+.ringWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 218px;
+  height: 218px;
+}
+
+.ringGlow {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--lk-rgb), 0.06) 40%, transparent 70%);
+  animation: lkPulse 2s ease-in-out infinite;
+  transition: background 0.8s;
+}
+
+.radarSvg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  animation: lkRadar 4s linear infinite;
+  opacity: 0.15;
+}
+
+.arcSvg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: rotate(-90deg);
+}
+
+.tickSvg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0.18;
+}
+
+/* ─── Ring center content ───────────────────── */
+.ringCenter {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.lockIconArea {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pingRing {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  border: 1px solid var(--lk-color, #ef4444);
+  transition: border-color 0.8s;
+  animation: lkPing 2.1s ease-out infinite;
+}
+
+.lockBox {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--lk-rgb), 0.12);
+  border: 1.5px solid rgba(var(--lk-rgb), 0.4);
+  transition: all 0.8s;
+}
+
+.lockGlow {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  opacity: 0.4;
+  background: var(--lk-color, #ef4444);
+  filter: blur(16px);
+  animation: lkPulse 1.6s ease-in-out infinite;
+}
+
+/* ─── Timer row ─────────────────────────────── */
+.timerRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.colonDots {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.colonDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--lk-color, #ef4444);
+}
+
+.colonDot:first-child { animation: lkPulse 1s ease-in-out infinite; }
+.colonDot:last-child  { animation: lkPulse 1s ease-in-out 0.5s infinite; }
+
+/* ─── Status pill ───────────────────────────── */
+.statusPill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 8px 20px;
+  border-radius: 100px;
+  background: rgba(var(--lk-rgb), 0.10);
+  border: 1px solid rgba(var(--lk-rgb), 0.25);
+  transition: all 0.8s;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--lk-color, #ef4444);
+  animation: lkPulse 1s ease-in-out infinite;
+}
+
+.statusLabel {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--lk-color, #ef4444);
+}
+
+/* ─── Message ───────────────────────────────── */
+.messageText {
+  font-size: 14px;
+  text-align: center;
+  margin-top: 12px;
+  line-height: 1.6;
+  max-width: 256px;
+  color: #475569;
+}
+
+.messageSub {
+  color: #334155;
+}
+
+/* ─── Attempt pips ──────────────────────────── */
+.pipsRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.pip {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 10px #ef4444, 0 0 4px #ef4444;
+  transform: scale(1.15);
+}
+
+.pipsCount {
+  font-size: 11px;
+  margin-left: 4px;
+  color: #334155;
+  font-family: monospace;
+}
+
+/* ─── Restore / unlock ──────────────────────── */
+.restoreText {
+  font-size: 12px;
+  margin-top: 12px;
+  font-family: monospace;
+  color: #1e3a8a;
+  text-align: center;
+}
+
+.unlockBtn {
+  color: #60a5fa;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  font-weight: 600;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: monospace;
+  font-size: 12px;
+  padding: 0;
+}
+
+.unlockBtn:hover { color: #93c5fd; }
+
+/* ─── Footer ────────────────────────────────── */
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 28px;
+  padding-top: 20px;
+  font-size: 11px;
+  width: 100%;
+  justify-content: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  color: #1e3a8a;
+}
+
+.footerText {
+  font-family: monospace;
+}
+
+/* ─── Scrolling ticker ──────────────────────── */
+.ticker {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 32px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 30;
+  background: rgba(239, 68, 68, 0.04);
+  border-top: 1px solid rgba(239, 68, 68, 0.1);
+  display: flex;
+  align-items: center;
+}
+
+.tickerTrack {
+  animation: lkTicker 18s linear infinite;
+  white-space: nowrap;
+  display: flex;
+}
+
+.tickerText {
+  font-size: 11px;
+  font-family: monospace;
+  margin-right: 64px;
+  color: #7f1d1d;
+}
+
+/* ─── SegDisplay ────────────────────────────── */
+.segRow {
+  display: flex;
+  gap: 2px;
+}
+
+.segDigit {
+  width: 28px;
+  height: 38px;
+  font-size: 26px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border-radius: 5px;
+  font-family: 'JetBrains Mono', monospace;
+  /* color, background, border, text-shadow are set via CSS vars */
+  color: var(--lk-color, #ef4444);
+  background: rgba(var(--lk-rgb), 0.08);
+  border: 1px solid rgba(var(--lk-rgb), 0.2);
+  text-shadow: 0 0 14px rgba(var(--lk-rgb), 0.9);
+}
