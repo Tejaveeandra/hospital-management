@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import AdminLayout from "../component/Layout/AdminLayout";
 import AdminDashboardContent from "./AdminDashboardContent";
 import DoctorPage from "./DoctorPage";
+import PatientPage from "./PatientPage";
+import UserManagementPage from "./UserManagementPage";
 import LeaveManagement from "./DoctorLeavePage";
 import AppointmentManagement from "./AppointmentPage";
 import DepartmentsPage from "./DepartmentsPage";
@@ -12,6 +14,8 @@ import HospitalChargesPage from "./HospitalChargesPage";
 const AdminPage = () => {
   const userRole = localStorage.getItem("role") || "patient";
   const [activeSection, setActiveSection] = useState("dashboard");
+  const [patientOperation, setPatientOperation] = useState("viewAll");
+  const [userOperation, setUserOperation] = useState("viewAll");
   const [doctorOperation, setDoctorOperation] = useState("viewAll");
   const [leaveOperation, setLeaveOperation] = useState("View All Leaves");
   const [appointmentOperation, setAppointmentOperation] = useState("View All Appointments");
@@ -43,8 +47,12 @@ const AdminPage = () => {
     switch (activeSection) {
       case 'dashboard':
         return <AdminDashboardContent />;
+      case 'users':
+        return <UserManagementPage isEmbedded={true} initialOperation={userOperation} />;
+      case 'patients':
+        return <PatientPage allowedOperations={["viewAll", "create", "update", "delete", "view", "bookAppointment"]} initialOperation={patientOperation} isEmbedded={true} showHeaders={false} />;
       case 'doctors':
-        return <DoctorPage allowedOperations={["viewAll", "create", "delete"]} initialOperation={doctorOperation} isEmbedded={true} showHeaders={false} />;
+        return <DoctorPage allowedOperations={["viewAll", "getById", "update", "create", "delete", "createLeave", "viewLeaveByDoctorId", "appointmentViewById", "appointmentUpdate", "appointmentReschedule", "appointmentCancel", "appointmentViewByDoctorDate", "appointmentCountByDoctorDate", "prescriptionCreate", "prescriptionByPatient", "prescriptionMy"]} initialOperation={doctorOperation} isEmbedded={true} showHeaders={false} />;
       case 'leaves':
         return <LeaveManagement allowedOperations={["View All Leaves", "View Pending Leaves", "Update Leave Status", "Delete Leave"]} initialOperation={leaveOperation} isEmbedded={true} />;
       case 'appointments':
@@ -67,14 +75,16 @@ const AdminPage = () => {
     }
   };
 
-  const handleSetSpecificOperation = (operation) => {
-    if (activeSection === 'doctors') setDoctorOperation(operation);
-    if (activeSection === 'leaves') setLeaveOperation(operation);
-    if (activeSection === 'appointments') setAppointmentOperation(operation);
-    if (activeSection === 'departments') setDepartmentOperation(operation);
-    if (activeSection === 'prescriptions') setPrescriptionOperation(operation);
-    if (activeSection === 'medicineStore') setMedicineStoreOperation(operation);
-    if (activeSection === 'hospitalCharges') setHospitalChargesOperation(operation);
+  const handleSetSpecificOperation = (section, operation) => {
+    if (section === 'users') setUserOperation(operation);
+    if (section === 'patients') setPatientOperation(operation);
+    if (section === 'doctors') setDoctorOperation(operation);
+    if (section === 'leaves') setLeaveOperation(operation);
+    if (section === 'appointments') setAppointmentOperation(operation);
+    if (section === 'departments') setDepartmentOperation(operation);
+    if (section === 'prescriptions') setPrescriptionOperation(operation);
+    if (section === 'medicineStore') setMedicineStoreOperation(operation);
+    if (section === 'hospitalCharges') setHospitalChargesOperation(operation);
   };
 
   return (

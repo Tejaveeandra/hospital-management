@@ -33,15 +33,17 @@ const AdminDashboardContent = () => {
 
         // 1. Fetch Total Patients
         try {
-          const patientsRes = await api.get('/patients');
-          if (Array.isArray(patientsRes.data)) {
+          const patientsRes = await api.get('/patients/getAllPatients');
+          if (patientsRes.data && Array.isArray(patientsRes.data.content)) {
+            setTotalPatients(patientsRes.data.totalElements || patientsRes.data.content.length);
+          } else if (Array.isArray(patientsRes.data)) {
             setTotalPatients(patientsRes.data.length);
           }
         } catch (e) { console.error("Failed to fetch patients", e); }
 
         // 2. Fetch Appointments
         try {
-          const apptsRes = await api.get('/appointments');
+          const apptsRes = await api.get('/appointments/ViewAllAppointments');
           if (Array.isArray(apptsRes.data)) {
             const allAppts = apptsRes.data;
             setTodaysAppointments(allAppts.length); // Assuming all are relevant or can be filtered by date
@@ -74,7 +76,7 @@ const AdminDashboardContent = () => {
 
         // 4. Fetch Low Stock Alerts
         try {
-          const lowStockRes = await api.get('/medicine-store/low-stock');
+          const lowStockRes = await api.get('/api/medicine-store/low-stock');
           if (Array.isArray(lowStockRes.data)) {
             setLowStockCount(lowStockRes.data.length);
           }

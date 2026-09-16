@@ -25,9 +25,9 @@ const STRENGTH_LABELS = ['', 'Weak', 'Fair', 'Good', 'Strong'];
 const STRENGTH_COLORS = ['', '#ef4444', '#f59e0b', '#3b82f6', '#22c55e'];
 
 /* ══════════════════════════════════════════════════════════════════════════ */
-function ForgotPasswordPage({ onBack }) {
-  const [step, setStep]               = useState(1);
-  const [email, setEmail]             = useState('');
+function ForgotPasswordPage({ onBack, initialEmail = '', initialStep = 1 }) {
+  const [step, setStep]               = useState(initialStep);
+  const [email, setEmail]             = useState(initialEmail);
   const [otp, setOtp]                 = useState(['', '', '', '', '', '']);
   const [newPass, setNewPass]         = useState('');
   const [confirmPass, setConfirmPass] = useState('');

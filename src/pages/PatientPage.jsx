@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 import styles from "./PatientPage.module.css";
 import AppointmentManagement, { AppointmentOperation } from "./AppointmentPage";
 
-const PatientPage = ({ isEmbedded = false }) => {
-  const [operationMode, setOperationMode] = useState("");
+const PatientPage = ({ initialOperation, isEmbedded = false }) => {
+  const [operationMode, setOperationMode] = useState(initialOperation || "");
   const [patientId, setPatientId] = useState(null);
   const [formData, setFormData] = useState({
     patientId: "",
@@ -59,6 +59,15 @@ const PatientPage = ({ isEmbedded = false }) => {
     setCurrentPage(0);
     setPatientPrescriptions([]);
   };
+
+  React.useEffect(() => {
+    if (initialOperation) {
+      setOperationMode(initialOperation);
+      if (initialOperation === "viewAll") {
+        fetchAllPatients(0);
+      }
+    }
+  }, [initialOperation]);
 
   const handleOperation = (mode) => {
     setOperationMode(mode);

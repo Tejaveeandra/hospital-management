@@ -27,11 +27,12 @@ const HospitalIcon = () => (
 
 /* ─── Login page ────────────────────────────────────── */
 const Login = () => {
-  const [username, setUsername]             = useState('');
+  const [step, setStep]                     = useState(1);
+  const [identifier, setIdentifier]         = useState('');
   const [password, setPassword]             = useState('');
   const [loading, setLoading]               = useState(false);
   const [error, setError]                   = useState('');
-  const [usernameError, setUsernameError]   = useState('');
+  const [identifierError, setIdentifierError] = useState('');
   const [passwordError, setPasswordError]   = useState('');
 
   const initialRemaining = getRemainingSeconds();
@@ -41,6 +42,8 @@ const Login = () => {
   const [warningAttempts, setWarningAttempts] = useState(0);
   const [showWarning, setShowWarning]         = useState(false);
   const [showForgot, setShowForgot]           = useState(false);
+  const [forgotStep, setForgotStep]           = useState(1);
+  const [activationEmail, setActivationEmail] = useState('');
 
   const navigate = useNavigate();
 
@@ -73,13 +76,46 @@ const Login = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'username') {
-      setUsername(value);
-      setUsernameError(value.trim() === '' ? 'Please provide username' : '');
+    if (name === 'identifier') {
+      setIdentifier(value);
+      setIdentifierError(value.trim() === '' ? 'Please provide username or email' : '');
+      setError('');
     }
     if (name === 'password') {
       setPassword(value);
       setPasswordError(value.trim() === '' ? 'Please provide password' : '');
+      setError('');
+    }
+  };
+
+  const handleNext = async (e) => {
+    e.preventDefault();
+    if (isLocked) return;
+    
+    if (!identifier.trim()) { 
+      setIdentifierError('Please provide username or email'); 
+      return; 
+    }
+    
+    setLoading(true);
+    setError('');
+    try {
+      const res = await api.get(`/users/check-status?identifier=${encodeURIComponent(identifier)}`);
+      const data = res.data;
+      if (!data.exists) {
+        setError("Couldn't find your account");
+      } else if (data.requiresActivation) {
+        await api.post('/users/forgot-password/send-otp', { email: identifier });
+        setActivationEmail(data.email);
+        setForgotStep(2); // Skip to OTP step
+        setShowForgot(true);
+      } else {
+        setStep(2);
+      }
+    } catch (err) {
+      setError('An error occurred checking your account.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -89,13 +125,12 @@ const Login = () => {
     setError('');
 
     let valid = true;
-    if (!username) { setUsernameError('Please provide username'); valid = false; }
     if (!password) { setPasswordError('Please provide password'); valid = false; }
     if (!valid) return;
 
     setLoading(true);
     try {
-      const response = await api.post('/users/login', { username, password });
+      const response = await api.post('/users/login', { username: identifier, password });
       let data = response.data;
 
       if (typeof data === 'string') {
@@ -123,7 +158,7 @@ const Login = () => {
       else                              navigate(`/${role.toLowerCase()}`);
 
     } catch (err) {
-      const msg = err.response?.data?.message || 'Login failed. Please check your credentials.';
+      const msg = err.response?.data?.message || err.response?.data || 'Login failed. Please check your credentials.';
       setError(msg);
       if (msg.toLowerCase().includes('locked')) {
         const lockUntil = Date.now() + LOCK_DURATION_MS;
@@ -151,12 +186,16 @@ const Login = () => {
     return <LockoutScreen lockCountdown={lockCountdown} onUnlock={handleUnlock}/>;
   }
 
-  /* ── Show Forgot Password screen ── */
+  /* ── Show Forgot Password or Activation screen ── */
   if (showForgot) {
-    return <ForgotPasswordPage onBack={() => setShowForgot(false)} />;
+    return <ForgotPasswordPage 
+      onBack={() => setShowForgot(false)} 
+      initialEmail={activationEmail} 
+      initialStep={forgotStep} 
+    />;
   }
 
-  /* ── Normal login form ── */
+  /* ── Normal login form (2-step) ── */
   return (
     <div className={styles.splitLayout}>
       
@@ -187,56 +226,84 @@ const Login = () => {
         <div className={styles.loginFormContainer}>
 
           <div className={styles.welcomeText}>
-            <h2>Welcome back</h2>
-            <p>Sign in to access your dashboard</p>
+            <h2>{step === 1 ? 'Sign in' : 'Welcome'}</h2>
+            <p>{step === 1 ? 'Continue to MedCenter' : identifier}</p>
           </div>
 
           <div className={styles.formRelativeContainer}>
-            <form onSubmit={handleLogin} className={styles.form}>
+            <form onSubmit={step === 1 ? handleNext : handleLogin} className={styles.form}>
 
               {error && <div className={styles.errorMessage}>{error}</div>}
 
-              <div className={styles.inputGroup}>
-                <label htmlFor="username">Username</label>
-                <input
-                  type="text" id="username" name="username"
-                  placeholder="Enter your username"
-                  value={username} onChange={handleInputChange}
-                  className={usernameError ? styles.inputError : ''}
-                />
-                {usernameError && <span className={styles.errorText}>{usernameError}</span>}
-              </div>
-
-              <div className={styles.inputGroup}>
-                <label htmlFor="password">Password</label>
-                <input
-                  type="password" id="password" name="password"
-                  placeholder="••••••••"
-                  value={password} onChange={handleInputChange}
-                  className={passwordError ? styles.inputError : ''}
-                />
-                {passwordError && <span className={styles.errorText}>{passwordError}</span>}
-              </div>
+              {step === 1 ? (
+                <div className={styles.inputGroup}>
+                  <label htmlFor="identifier">Username or Email</label>
+                  <input
+                    type="text" id="identifier" name="identifier"
+                    placeholder="Enter your username or email"
+                    value={identifier} onChange={handleInputChange}
+                    className={identifierError ? styles.inputError : ''}
+                    autoFocus
+                  />
+                  {identifierError && <span className={styles.errorText}>{identifierError}</span>}
+                </div>
+              ) : (
+                <div className={styles.inputGroup}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label htmlFor="password">Password</label>
+                  </div>
+                  <input
+                    type="password" id="password" name="password"
+                    placeholder="••••••••"
+                    value={password} onChange={handleInputChange}
+                    className={passwordError ? styles.inputError : ''}
+                    autoFocus
+                  />
+                  {passwordError && <span className={styles.errorText}>{passwordError}</span>}
+                </div>
+              )}
 
               <button type="submit" className={styles.submitBtn} disabled={loading}>
-                {loading ? 'Signing in...' : 'Sign In'}
+                {loading ? 'Please wait...' : step === 1 ? 'Next' : 'Sign In'}
               </button>
 
-              <button
-                type="button"
-                onClick={() => setShowForgot(true)}
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  color: '#3b82f6', fontSize: '13px', fontWeight: 500,
-                  textAlign: 'center', width: '100%', marginTop: 4,
-                  textDecoration: 'underline', textUnderlineOffset: 3,
-                  transition: 'color 0.2s',
-                }}
-                onMouseEnter={e => e.currentTarget.style.color = '#60a5fa'}
-                onMouseLeave={e => e.currentTarget.style.color = '#3b82f6'}
-              >
-                Forgot Password?
-              </button>
+              {step === 2 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActivationEmail('');
+                    setForgotStep(1);
+                    setShowForgot(true);
+                  }}
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: '#3b82f6', fontSize: '13px', fontWeight: 500,
+                    textAlign: 'center', width: '100%', marginTop: 4,
+                    textDecoration: 'underline', textUnderlineOffset: 3,
+                    transition: 'color 0.2s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.color = '#60a5fa'}
+                  onMouseLeave={e => e.currentTarget.style.color = '#3b82f6'}
+                >
+                  Forgot Password?
+                </button>
+              )}
+              
+              {step === 2 && (
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: '#64748b', fontSize: '13px', fontWeight: 500,
+                    textAlign: 'center', width: '100%', marginTop: 12,
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.color = '#94a3b8'}
+                  onMouseLeave={e => e.currentTarget.style.color = '#64748b'}
+                >
+                  Use a different account
+                </button>
+              )}
 
             </form>
           </div>

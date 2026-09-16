@@ -3,6 +3,7 @@ import axios from "axios";
 import api from "../api/api";
 import styles from "./AppointmentPage.module.css";
 import PaymentModal from "../component/PaymentModal";
+import AppointmentTable from "../component/appointments/AppointmentTable";
 
 const AppointmentManagement = ({ allowedOperations, doctorId, operationMode, user: propUser, isEmbedded = false }) => {
   const [formData, setFormData] = useState({
@@ -31,6 +32,14 @@ const AppointmentManagement = ({ allowedOperations, doctorId, operationMode, use
   });
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(15);
+  const [totalPages, setTotalPages] = useState(0);
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [searchStartDate, setSearchStartDate] = useState("");
+  const [searchEndDate, setSearchEndDate] = useState("");
+  const [searchPatientId, setSearchPatientId] = useState("");
 
   const [internalOperationMode, setInternalOperationMode] = useState(
     operationMode || allowedOperations[0] || "View Appointment by ID"
@@ -88,6 +97,11 @@ const AppointmentManagement = ({ allowedOperations, doctorId, operationMode, use
   useEffect(() => {
     fetchHospitalCharges();
   }, []);
+
+  const handlePay = (appointmentId, amount) => {
+    setSelectedAppointment({ appointmentId, amount });
+    setShowPaymentModal(true);
+  };
 
   const getAppointmentCharge = (appointment) => {
     if (!appointment) {
@@ -207,14 +221,33 @@ const AppointmentManagement = ({ allowedOperations, doctorId, operationMode, use
     }
   };
 
-  const fetchAllAppointments = async () => {
+  const fetchAllAppointments = async (page = currentPage) => {
     if (internalOperationMode !== "View All Appointments") return;
     setLoading(true);
     try {
+      const params = {
+        page: page,
+        size: pageSize,
+        sortBy: 'appointmentDate'
+      };
+      
+      if (showAdvancedSearch) {
+        if (searchStartDate) params.startDate = searchStartDate;
+        if (searchEndDate) params.endDate = searchEndDate;
+        if (searchPatientId) params.searchPatientId = searchPatientId;
+      }
+
       const response = await api.get(
-        "/appointments/ViewAllAppointments"
+        "/appointments/ViewAllAppointments", { params }
       );
-      setAppointments(response.data);
+      
+      if (response.data && response.data.content) {
+        setAppointments(response.data.content);
+        setTotalPages(response.data.totalPages);
+      } else if (Array.isArray(response.data)) {
+        setAppointments(response.data);
+        setTotalPages(1);
+      }
       setMessage("All appointments fetched.");
     } catch (error) {
       setMessage("Error fetching appointments.");
@@ -549,59 +582,12 @@ const AppointmentManagement = ({ allowedOperations, doctorId, operationMode, use
           </div>
           {appointments.length > 0 && (
             <div className={styles['results-section']}>
-              <table className={styles['appointments-table']}>
-                <thead>
-                  <tr>
-                    <th>Appointment ID</th>
-                    <th>Patient ID</th>
-                    <th>Patient Name</th>
-                    <th>Disease</th>
-                    <th>Doctor ID</th>
-                    <th>Doctor Name</th>
-                    <th>Date</th>
-                    <th>Time Slot</th>
-                    <th>Emergency</th>
-                    <th>Payment Status</th>
-                    {(user?.role === 'patient' || user?.role === 'admin') && <th>Action</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {appointments.map((appointment) => (
-                    <tr key={appointment.appointmentId}>
-                      <td>{appointment.appointmentId}</td>
-                      <td>{appointment.patientId}</td>
-                      <td>{appointment.patientName}</td>
-                      <td>{appointment.disease}</td>
-                      <td>{appointment.doctorId}</td>
-                      <td>{appointment.doctorName}</td>
-                      <td>{appointment.appointmentDate}</td>
-                      <td>{appointment.timeSlot}</td>
-                      <td>{appointment.isEmergency || appointment.emergency ? "Yes" : "No"}</td>
-                      <td>
-                        <span className={(appointment.isPaid || appointment.is_paid || appointment.paid) ? styles['status-paid'] : styles['status-unpaid']}>
-                          {(appointment.isPaid || appointment.is_paid || appointment.paid) ? "Paid" : "Unpaid"}
-                        </span>
-                      </td>
-                      {(user?.role === 'patient' || user?.role === 'admin') && (
-                        <td>
-                          {!(appointment.isPaid || appointment.is_paid || appointment.paid) && (
-                            <button
-                              onClick={() => {
-                                const amount = getAppointmentCharge(appointment);
-                                setSelectedAppointment({ appointmentId: appointment.appointmentId, amount });
-                                setShowPaymentModal(true);
-                              }}
-                              className={styles['pay-button-table']}
-                            >
-                              Pay
-                            </button>
-                          )}
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <AppointmentTable
+                appointments={appointments}
+                user={user}
+                getAppointmentCharge={getAppointmentCharge}
+                onPay={handlePay}
+              />
             </div>
           )}
         </div>
@@ -610,60 +596,68 @@ const AppointmentManagement = ({ allowedOperations, doctorId, operationMode, use
       {internalOperationMode === "View All Appointments" && (
         <div className={styles['all-appointments-container']}>
           <h3>All Appointments</h3>
+          
+          {(user?.role === 'admin' || user?.role === 'receptionist') && (
+            <div className={styles['advanced-search-container']}>
+              <button 
+                className={styles['toggle-search-btn']}
+                onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+              >
+                🔍 Search Past Data
+              </button>
+              
+              {showAdvancedSearch && (
+                <div className={styles['search-panel']}>
+                  <div className={styles['search-group']}>
+                    <label>Start Date:</label>
+                    <input type="date" value={searchStartDate} onChange={(e) => setSearchStartDate(e.target.value)} />
+                  </div>
+                  <div className={styles['search-group']}>
+                    <label>End Date:</label>
+                    <input type="date" value={searchEndDate} onChange={(e) => setSearchEndDate(e.target.value)} />
+                  </div>
+                  <div className={styles['search-group']}>
+                    <label>Patient ID:</label>
+                    <input type="number" value={searchPatientId} onChange={(e) => setSearchPatientId(e.target.value)} />
+                  </div>
+                  <button onClick={() => { setCurrentPage(0); fetchAllAppointments(0); }}>Search</button>
+                </div>
+              )}
+            </div>
+          )}
+
           {appointments.length > 0 ? (
-            <table className={styles['appointments-table']}>
-              <thead>
-                <tr>
-                  <th>Appointment ID</th>
-                  <th>Patient ID</th>
-                  <th>Patient Name</th>
-                  <th>Disease</th>
-                  <th>Doctor ID</th>
-                  <th>Doctor Name</th>
-                  <th>Date</th>
-                  <th>Time Slot</th>
-                  <th>Emergency</th>
-                  <th>Payment Status</th>
-                  {(user?.role === 'patient' || user?.role === 'admin') && <th>Action</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {appointments.map((appointment) => (
-                  <tr key={appointment.appointmentId}>
-                    <td>{appointment.appointmentId}</td>
-                    <td>{appointment.patientId}</td>
-                    <td>{appointment.patientName}</td>
-                    <td>{appointment.disease}</td>
-                    <td>{appointment.doctorId}</td>
-                    <td>{appointment.doctorName}</td>
-                    <td>{appointment.appointmentDate}</td>
-                    <td>{appointment.timeSlot}</td>
-                    <td>{appointment.isEmergency || appointment.emergency ? "Yes" : "No"}</td>
-                    <td>
-                      <span className={(appointment.isPaid || appointment.is_paid || appointment.paid) ? styles['status-paid'] : styles['status-unpaid']}>
-                        {(appointment.isPaid || appointment.is_paid || appointment.paid) ? "Paid" : "Unpaid"}
-                      </span>
-                    </td>
-                    {(user?.role === 'patient' || user?.role === 'admin') && (
-                      <td>
-                        {!(appointment.isPaid || appointment.is_paid || appointment.paid) && (
-                          <button
-                            onClick={() => {
-                              const amount = getAppointmentCharge(appointment);
-                              setSelectedAppointment({ appointmentId: appointment.appointmentId, amount });
-                              setShowPaymentModal(true);
-                            }}
-                            className={styles['pay-button-table']}
-                          >
-                            Pay
-                          </button>
-                        )}
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <>
+              <AppointmentTable
+                appointments={appointments}
+                user={user}
+                getAppointmentCharge={getAppointmentCharge}
+                onPay={handlePay}
+              />
+              <div className={styles['pagination-controls']}>
+                <button 
+                  disabled={currentPage === 0} 
+                  onClick={() => {
+                    const newPage = currentPage - 1;
+                    setCurrentPage(newPage);
+                    fetchAllAppointments(newPage);
+                  }}
+                >
+                  Previous
+                </button>
+                <span>Page {currentPage + 1} of {Math.max(1, totalPages)}</span>
+                <button 
+                  disabled={currentPage >= totalPages - 1} 
+                  onClick={() => {
+                    const newPage = currentPage + 1;
+                    setCurrentPage(newPage);
+                    fetchAllAppointments(newPage);
+                  }}
+                >
+                  Next
+                </button>
+              </div>
+            </>
           ) : (
             <p>No appointments available.</p>
           )}
@@ -811,57 +805,12 @@ const AppointmentManagement = ({ allowedOperations, doctorId, operationMode, use
           />
           <button onClick={fetchAppointmentsByDoctorAndDate} disabled={loading}>Fetch</button>
           {appointments.length > 0 && (
-            <table className={styles['appointments-table']}>
-              <thead>
-                <tr>
-                  <th>Appointment ID</th>
-                  <th>Patient ID</th>
-                  <th>Patient Name</th>
-                  <th>Disease</th>
-                  <th>Doctor ID</th>
-                  <th>Doctor Name</th>
-                  <th>Date</th>
-                  <th>Time Slot</th>
-                  <th>Emergency</th>
-                  <th>Preferred Doctor</th>
-                  <th>Payment Status</th>
-                  {(user?.role === 'patient' || user?.role === 'admin') && <th>Action</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {appointments.map((appointment) => (
-                  <tr key={appointment.appointmentId}>
-                    <td>{appointment.appointmentId}</td>
-                    <td>{appointment.patientId}</td>
-                    <td>{appointment.patientName}</td>
-                    <td>{appointment.disease}</td>
-                    <td>{appointment.doctorId}</td>
-                    <td>{appointment.doctorName}</td>
-                    <td>{appointment.appointmentDate}</td>
-                    <td>{appointment.timeSlot}</td>
-                    <td>{appointment.isEmergency || appointment.emergency ? "Yes" : "No"}</td>
-                    <td>{appointment.isPreferredDoctor ? "Yes" : "No"}</td>
-                    <td>
-                    </td>
-                    {(user?.role === 'patient' || user?.role === 'admin') && (
-                      <td>
-                        {!appointment.isPaid && (
-                          <button
-                            onClick={() => {
-                              setSelectedAppointment({ appointmentId: appointment.appointmentId, amount: 500 });
-                              setShowPaymentModal(true);
-                            }}
-                            className={styles['pay-button-table']}
-                          >
-                            Pay
-                          </button>
-                        )}
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              <AppointmentTable
+                appointments={appointments}
+                user={user}
+                getAppointmentCharge={getAppointmentCharge}
+                onPay={handlePay}
+              />
           )}
         </div>
       )}
