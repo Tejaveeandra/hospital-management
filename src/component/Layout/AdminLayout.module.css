@@ -14,6 +14,6 @@
 
 .pageContent {
   flex: 1;
-  padding: 0;
+  padding: 24px 32px;
   background-color: var(--bg-main);
 }
