@@ -125,37 +125,45 @@
 .pieContainer {
   display: flex;
   flex-direction: column;
-  height: 300px;
+  min-height: 340px;
 }
 
 .legend {
-  margin-top: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 12px;
+  max-height: 160px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .legendItem {
   display: flex;
   align-items: center;
-  font-size: 0.875rem;
+  font-size: 0.81rem;
 }
 
 .legendDot {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  margin-right: 8px;
+  margin-right: 6px;
+  flex-shrink: 0;
 }
 
 .legendName {
   color: #4b5563;
-  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.legendValue {
+.legendCount {
   font-weight: 600;
   color: #1f2937;
+  margin-left: 4px;
+  font-size: 0.78rem;
 }
 
 /* Appointments Table */

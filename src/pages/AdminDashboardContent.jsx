@@ -82,25 +82,38 @@ const AdminDashboardContent = () => {
           }
         } catch (e) { console.error("Failed to fetch low stock", e); }
 
-        // 5. Fetch Departments for Pie Chart
+        // 5. Fetch Real Doctor Counts per Department for Pie Chart
         try {
-          // Fallback to /api/departments since it's used in DepartmentsPage
-          const deptRes = await api.get('/api/departments');
-          if (Array.isArray(deptRes.data) && deptRes.data.length > 0) {
-            const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#6b7280', '#ef4444', '#14b8a6'];
-            const mapped = deptRes.data.map((d, i) => ({
-              name: d.departmentName || 'Unknown',
-              value: 10 + (i * 2), // Mock percentage weight for display purposes
+          const docsRes = await api.get('/doctors/');
+          const docsList = Array.isArray(docsRes.data) ? docsRes.data : (docsRes.data?.content || []);
+          if (docsList.length > 0) {
+            const counts = {};
+            docsList.forEach(d => {
+              const name = d.departmentName || 'General';
+              counts[name] = (counts[name] || 0) + 1;
+            });
+            const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#6b7280', '#ef4444', '#14b8a6', '#ec4899', '#6366f1'];
+            const mapped = Object.keys(counts).map((deptName, i) => ({
+              name: deptName,
+              value: counts[deptName],
               color: colors[i % colors.length]
             }));
             setDepartmentData(mapped);
           } else {
-            // Default if empty
-            setDepartmentData([{ name: 'General', value: 100, color: '#3b82f6' }]);
+            const deptRes = await api.get('/api/departments');
+            if (Array.isArray(deptRes.data) && deptRes.data.length > 0) {
+              const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#6b7280', '#ef4444', '#14b8a6'];
+              const mapped = deptRes.data.map((d, i) => ({
+                name: d.departmentName || 'Unknown',
+                value: 1,
+                color: colors[i % colors.length]
+              }));
+              setDepartmentData(mapped);
+            }
           }
         } catch (e) { 
-          console.error("Failed to fetch departments", e);
-          setDepartmentData([{ name: 'General', value: 100, color: '#3b82f6' }]);
+          console.error("Failed to fetch department doctor mix", e);
+          setDepartmentData([{ name: 'General', value: 1, color: '#3b82f6' }]);
         }
 
       } catch (error) {
@@ -223,7 +236,7 @@ const AdminDashboardContent = () => {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip formatter={(value) => [`${value} Doctors`, 'Department Total']} />
               </PieChart>
             </ResponsiveContainer>
             
@@ -232,6 +245,7 @@ const AdminDashboardContent = () => {
                 <div key={index} className={styles.legendItem}>
                   <div className={styles.legendDot} style={{ backgroundColor: dept.color }}></div>
                   <span className={styles.legendName}>{dept.name}</span>
+                  <span className={styles.legendCount}>({dept.value})</span>
                 </div>
               ))}
             </div>

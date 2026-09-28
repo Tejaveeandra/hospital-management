@@ -1,94 +1,247 @@
+/* MedicineStorePage.module.css */
 .container {
-  padding: 16px;
-  font-family: Arial, sans-serif;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .title {
-  color: #2c3e50;
-  margin-bottom: 16px;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #3498db;
+  color: #0f172a;
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-bottom: 20px;
 }
 
 .loading {
-  color: #7f8c8d;
+  color: #6366f1;
+  font-weight: 600;
+  font-size: 0.95rem;
   margin-bottom: 12px;
 }
 
 .section {
-  background: #fff;
-  padding: 16px;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  padding: 28px 32px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
-.section h3 {
-  color: #34495e;
-  margin-bottom: 12px;
-  font-size: 1.1rem;
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
-.section label {
-  display: block;
-  margin-bottom: 4px;
-  color: #2c3e50;
+.headerTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
 }
 
-.section input {
-  padding: 8px 12px;
-  margin-bottom: 12px;
-  margin-right: 8px;
-  border: 1px solid #bdc3c7;
-  border-radius: 4px;
-  max-width: 200px;
+.headerSubtitle {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 2px;
 }
 
-.section button {
-  padding: 8px 16px;
-  margin-right: 8px;
-  margin-bottom: 8px;
-  background-color: #3498db;
-  color: white;
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.inputRow {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.inputGroup label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.inputGroup input {
+  padding: 11px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.2s ease;
+  color: #0f172a;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #ffffff;
+}
+
+.inputGroup input:placeholder {
+  color: #94a3b8;
+}
+
+.inputGroup input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.submitBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 24px;
+  background-color: #0f172a;
   border: none;
-  border-radius: 4px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: white;
   cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: flex-start;
+  margin-top: 8px;
 }
 
-.section button:hover {
-  background-color: #2980b9;
+.submitBtn:hover {
+  background-color: #1e293b;
+  transform: translateY(-1px);
 }
 
-.section button.danger {
-  background-color: #e74c3c;
+.submitBtn.danger {
+  background-color: #dc2626;
 }
 
-.section button.danger:hover {
-  background-color: #c0392b;
+.submitBtn.danger:hover {
+  background-color: #b91c1c;
 }
 
+.submitBtn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Inventory Table */
 .table {
   width: 100%;
-  border-collapse: collapse;
-  margin-top: 12px;
-}
-
-.table th,
-.table td {
-  border: 1px solid #bdc3c7;
-  padding: 8px 12px;
-  text-align: left;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 16px;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
 }
 
 .table th {
-  background-color: #ecf0f1;
-  color: #2c3e50;
+  background: #f8fafc;
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #475569;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.table td {
+  padding: 14px 16px;
+  color: #1e293b;
+  font-size: 0.92rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table tr:hover td {
+  background: #f8fafc;
+}
+
+.stockBadge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.stockGood {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.stockLow {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.stockOut {
+  background-color: #fee2e2;
+  color: #991b1b;
 }
 
 .message {
-  margin-top: 12px;
-  padding: 8px 12px;
-  background: #e8f5e9;
-  color: #2e7d32;
-  border-radius: 4px;
+  margin-top: 16px;
+  padding: 12px 18px;
+  background: #f1f5f9;
+  color: #334155;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
 }
+
+.idCell {
+  font-weight: 600;
+  color: #6366f1;
+}
+
+.nameCell {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.priceCell {
+  font-weight: 600;
+  color: #059669;
+}
+
+.emptyMessage {
+  color: #64748b;
+  font-style: italic;
+}
+
+.alignEnd {
+  align-items: flex-end;
+  margin-bottom: 20px;
+}
+
+.alignEndNoMargin {
+  align-items: flex-end;
+}
+
+.btnNoMargin {
+  margin-top: 0;
+}
+

@@ -7,6 +7,7 @@ const HospitalChargesPage = ({ allowedOperations = [], initialOperation, isEmbed
   const [charges, setCharges] = useState([]);
   const [chargeName, setChargeName] = useState("");
   const [amount, setAmount] = useState("");
+  const [deleteId, setDeleteId] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -33,6 +34,32 @@ const HospitalChargesPage = ({ allowedOperations = [], initialOperation, isEmbed
     }
   };
 
+  const handleAdd = async (e) => {
+    e.preventDefault();
+    const name = chargeName?.trim();
+    const amt = Number(amount);
+    if (!name) {
+      setMessage("Enter charge name (e.g. GENERAL_CONSULTATION).");
+      return;
+    }
+    if (isNaN(amt) || amt < 0) {
+      setMessage("Enter a valid amount.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await api.post(`/api/hospital-charges/add?name=${encodeURIComponent(name)}&amount=${amt}`);
+      setMessage("Charge created successfully.");
+      setChargeName("");
+      setAmount("");
+      fetchList();
+    } catch (e) {
+      setMessage("Error creating charge.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleUpdate = async (e) => {
     e.preventDefault();
     const name = chargeName?.trim();
@@ -50,7 +77,7 @@ const HospitalChargesPage = ({ allowedOperations = [], initialOperation, isEmbed
       await api.post(
         `/api/hospital-charges/update?name=${encodeURIComponent(name)}&amount=${amt}`
       );
-      setMessage("Charge updated.");
+      setMessage("Charge updated successfully.");
       setChargeName("");
       setAmount("");
       fetchList();
@@ -61,22 +88,28 @@ const HospitalChargesPage = ({ allowedOperations = [], initialOperation, isEmbed
     }
   };
 
-  const handleSeed = async () => {
+  const handleDelete = async () => {
+    if (!deleteId?.trim()) {
+      setMessage("Enter Charge ID to delete.");
+      return;
+    }
     setLoading(true);
     try {
-      await api.post("/api/hospital-charges/seed");
-      setMessage("Default charges seeded.");
+      await api.delete(`/api/hospital-charges/delete/${deleteId.trim()}`);
+      setMessage("Hospital charge deleted.");
+      setDeleteId("");
       fetchList();
     } catch (e) {
-      setMessage("Error seeding charges.");
+      setMessage("Error deleting charge.");
     } finally {
       setLoading(false);
     }
   };
 
   const showList = operationMode === "List Charges" || operationMode === "View Hospital Charges";
+  const showAdd = operationMode === "Add Charge" || operationMode === "Create Charge";
   const showUpdate = operationMode === "Update Charge" || operationMode === "Edit Charge";
-  const showSeed = operationMode === "Seed Charges";
+  const showDelete = operationMode === "Delete Charge" || operationMode === "Remove Charge";
 
   useEffect(() => {
     if (showList) fetchList();
@@ -89,22 +122,22 @@ const HospitalChargesPage = ({ allowedOperations = [], initialOperation, isEmbed
 
       {showList && (
         <div className={styles.section}>
-          <h3>All Charges</h3>
+          <h3>All Fee Schedules</h3>
           {charges.length > 0 ? (
             <table className={styles.table}>
               <thead>
                 <tr>
                   <th>ID</th>
                   <th>Charge Name</th>
-                  <th>Amount</th>
+                  <th>Amount ($)</th>
                 </tr>
               </thead>
               <tbody>
                 {charges.map((c) => (
                   <tr key={c.id}>
-                    <td>{c.id}</td>
+                    <td>#{c.id}</td>
                     <td>{c.chargeName ?? c.name}</td>
-                    <td>{c.amount}</td>
+                    <td>${Number(c.amount).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -115,9 +148,37 @@ const HospitalChargesPage = ({ allowedOperations = [], initialOperation, isEmbed
         </div>
       )}
 
+      {showAdd && (
+        <div className={styles.section}>
+          <h3>Add New Charge Schedule</h3>
+          <form onSubmit={handleAdd}>
+            <label>Charge Name (e.g. ICU_PER_DAY)</label>
+            <input
+              type="text"
+              value={chargeName}
+              onChange={(e) => setChargeName(e.target.value)}
+              placeholder="e.g. ICU_PER_DAY"
+              disabled={loading}
+              required
+            />
+            <label>Amount ($)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="e.g. 1500.00"
+              disabled={loading}
+              required
+            />
+            <button type="submit" disabled={loading}>Add Charge</button>
+          </form>
+        </div>
+      )}
+
       {showUpdate && (
         <div className={styles.section}>
-          <h3>Create or Update Charge</h3>
+          <h3>Update Existing Charge Schedule</h3>
           <form onSubmit={handleUpdate}>
             <label>Charge Name (e.g. GENERAL_CONSULTATION)</label>
             <input
@@ -126,8 +187,9 @@ const HospitalChargesPage = ({ allowedOperations = [], initialOperation, isEmbed
               onChange={(e) => setChargeName(e.target.value)}
               placeholder="GENERAL_CONSULTATION"
               disabled={loading}
+              required
             />
-            <label>Amount</label>
+            <label>New Amount ($)</label>
             <input
               type="number"
               step="0.01"
@@ -135,17 +197,27 @@ const HospitalChargesPage = ({ allowedOperations = [], initialOperation, isEmbed
               onChange={(e) => setAmount(e.target.value)}
               placeholder="500"
               disabled={loading}
+              required
             />
-            <button type="submit" disabled={loading}>Save</button>
+            <button type="submit" disabled={loading}>Update Charge</button>
           </form>
         </div>
       )}
 
-      {showSeed && (
+      {showDelete && (
         <div className={styles.section}>
-          <h3>Seed Default Charges</h3>
-          <p>Load default charge types (e.g. GENERAL_CONSULTATION, EMERGENCY_CONSULTATION).</p>
-          <button type="button" onClick={handleSeed} disabled={loading}>Seed Charges</button>
+          <h3>Delete Fee Schedule</h3>
+          <div>
+            <label>Charge ID</label>
+            <input
+              type="text"
+              value={deleteId}
+              onChange={(e) => setDeleteId(e.target.value)}
+              placeholder="Enter Charge ID (e.g. 1)"
+              disabled={loading}
+            />
+            <button type="button" onClick={handleDelete} disabled={loading}>Delete Charge</button>
+          </div>
         </div>
       )}
 

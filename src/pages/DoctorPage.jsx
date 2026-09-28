@@ -25,6 +25,9 @@ const DoctorContent = React.memo(({
   handlePreviousPage,
   handleNextPage,
   setDoctorId,
+  departments,
+  subDepartments,
+  onDeptChange,
 }) => {
   const leaveOperations = [];
   if (operationMode === "createLeave") {
@@ -59,45 +62,76 @@ const DoctorContent = React.memo(({
 
       {operationMode && operationMode !== "viewAll" && operationMode !== "createLeave" && operationMode !== "viewLeaveByDoctorId" && !Object.keys(appointmentOperationMap).includes(operationMode) && !Object.keys(prescriptionOperationMap).includes(operationMode) && (
         <div className={styles['operation-content']}>
-          <h2>
-            {operationMode === "create" && createdDoctor ? "Created Doctor Details" :
-              operationMode === "create" ? "Create Doctor" :
-                operationMode === "update" && createdDoctor ? "Updated Doctor Details" :
-                  operationMode === "update" ? "Update Doctor" :
-                    operationMode === "delete" ? "Delete Doctor" : "Doctor Details"}
-          </h2>
+          <div className={styles.headerRow}>
+            <div>
+              <h2 className={styles.headerTitle}>
+                {operationMode === "create" && createdDoctor ? "Created Doctor Details" :
+                  operationMode === "create" ? "Add Doctor Profile" :
+                    operationMode === "update" && createdDoctor ? "Updated Doctor Details" :
+                      operationMode === "update" ? "Update Doctor Profile" :
+                        operationMode === "delete" ? "Delete Doctor Record" : "Doctor Profile Details"}
+              </h2>
+              <div className={styles.headerSubtitle}>Manage physician profile, contact, experience, department, and sub-division assignment</div>
+            </div>
+          </div>
 
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <form onSubmit={handleSubmit} className={styles.formContainer}>
             {(operationMode === "getById" || operationMode === "delete") && (
-              <>
-                <label>Doctor ID:</label>
-                <input type="number" value={doctorId || ""} onChange={(e) => setDoctorId(Number(e.target.value))} required disabled={loading} />
-                <button type="button" onClick={operationMode === "getById" ? fetchDoctor : handleDeleteDoctor} disabled={loading}>
+              <div className={`${styles.inputRow} ${styles.alignEnd}`}>
+                <div className={styles.inputGroup}>
+                  <label>Doctor Code / ID</label>
+                  <input type="text" placeholder="Enter Doctor Code / ID (e.g. DOC-101 or 101)" value={doctorId || ""} onChange={(e) => setDoctorId(e.target.value)} required disabled={loading} />
+                </div>
+                <button type="button" className={`${styles.submitBtn} ${styles.btnNoMargin}`} onClick={operationMode === "getById" ? fetchDoctor : handleDeleteDoctor} disabled={loading}>
                   {loading ? (operationMode === "getById" ? "Fetching..." : "Deleting...") : (operationMode === "getById" ? "Fetch Doctor" : "Delete Doctor")}
                 </button>
-              </>
+              </div>
             )}
 
             {operationMode === "update" && !doctorFetched && !createdDoctor && (
-              <>
-                <label>Doctor ID:</label>
-                <input type="number" value={doctorId || ""} onChange={(e) => setDoctorId(Number(e.target.value))} required disabled={loading} />
-                <button type="button" onClick={fetchDoctor} disabled={loading}>Fetch Doctor for Update</button>
-              </>
+              <div className={`${styles.inputRow} ${styles.alignEnd}`}>
+                <div className={styles.inputGroup}>
+                  <label>Doctor Code / ID</label>
+                  <input type="text" placeholder="Enter Doctor Code / ID (e.g. DOC-101 or 101)" value={doctorId || ""} onChange={(e) => setDoctorId(e.target.value)} required disabled={loading} />
+                </div>
+                <button type="button" className={`${styles.submitBtn} ${styles.btnNoMargin}`} onClick={fetchDoctor} disabled={loading}>
+                  Fetch Doctor for Update
+                </button>
+              </div>
             )}
 
             {doctorFetched && operationMode === "getById" && (
               <>
-                <label>Doctor ID:</label>
-                <input type="text" value={doctorId || ""} disabled />
-                <label>Name:</label>
-                <input type="text" value={formData.doctorName} disabled />
-                <label>Specialization:</label>
-                <input type="text" value={formData.specialization} disabled />
-                <label>Contact:</label>
-                <input type="text" value={formData.contact} disabled />
-                <label>Years of Experience:</label>
-                <input type="number" value={formData.yoe} disabled />
+                <div className={styles.inputRow}>
+                  <div className={styles.inputGroup}>
+                    <label>Doctor ID</label>
+                    <input type="text" value={doctorId || ""} disabled />
+                  </div>
+                  <div className={styles.inputGroup}>
+                    <label>Doctor Full Name</label>
+                    <input type="text" value={formData.doctorName} disabled />
+                  </div>
+                </div>
+                <div className={styles.inputRow}>
+                  <div className={styles.inputGroup}>
+                    <label>Specialization</label>
+                    <input type="text" value={formData.specialization} disabled />
+                  </div>
+                  <div className={styles.inputGroup}>
+                    <label>Contact Number</label>
+                    <input type="text" value={formData.contact} disabled />
+                  </div>
+                </div>
+                <div className={styles.inputRow}>
+                  <div className={styles.inputGroup}>
+                    <label>Years of Experience</label>
+                    <input type="number" value={formData.yoe} disabled />
+                  </div>
+                  <div className={styles.inputGroup}>
+                    <label>Department</label>
+                    <input type="text" value={formData.departmentName || "N/A"} disabled />
+                  </div>
+                </div>
               </>
             )}
 
@@ -105,38 +139,99 @@ const DoctorContent = React.memo(({
               <>
                 {createdDoctor ? (
                   <>
-                    <label>Doctor ID:</label>
-                    <input type="text" value={createdDoctor.doctorId} disabled />
-                    <label>Name:</label>
-                    <input type="text" value={createdDoctor.doctorName} disabled />
-                    <label>Specialization:</label>
-                    <input type="text" value={createdDoctor.specialization} disabled />
-                    <label>Contact:</label>
-                    <input type="text" value={createdDoctor.contact} disabled />
-                    <label>Years of Experience:</label>
-                    <input type="number" value={createdDoctor.yoe} disabled />
-                    <label>Department Name:</label>
-                    <input type="text" value={createdDoctor.departmentName || "N/A"} disabled />
+                    <div className={styles.inputRow}>
+                      <div className={styles.inputGroup}>
+                        <label>Doctor ID</label>
+                        <input type="text" value={createdDoctor.doctorId} disabled />
+                      </div>
+                      <div className={styles.inputGroup}>
+                        <label>Doctor Code</label>
+                        <input type="text" value={createdDoctor.doctorCode || "N/A"} disabled />
+                      </div>
+                    </div>
+                    <div className={styles.inputRow}>
+                      <div className={styles.inputGroup}>
+                        <label>Doctor Full Name</label>
+                        <input type="text" value={createdDoctor.doctorName} disabled />
+                      </div>
+                      <div className={styles.inputGroup}>
+                        <label>Specialization</label>
+                        <input type="text" value={createdDoctor.specialization} disabled />
+                      </div>
+                    </div>
                   </>
                 ) : (
                   <>
                     {operationMode === "update" && (
-                      <div className={styles['doctor-id-display']}>
-                        <label>Doctor ID:</label>
+                      <div className={styles.inputGroup}>
+                        <label>Doctor ID</label>
                         <input type="text" value={doctorId || ""} disabled />
                       </div>
                     )}
-                    <label>Name:</label>
-                    <input type="text" name="doctorName" placeholder="Doctor Name" value={formData.doctorName} onChange={handleInputChange} required disabled={loading} />
-                    <label>Specialization:</label>
-                    <input type="text" name="specialization" placeholder="Specialization" value={formData.specialization} onChange={handleInputChange} required disabled={loading} />
-                    <label>Contact:</label>
-                    <input type="text" name="contact" placeholder="Contact (10 digits)" value={formData.contact} onChange={handleInputChange} required pattern="\d{10}" disabled={loading} />
-                    <label>Years of Experience:</label>
-                    <input type="number" name="yoe" placeholder="Years of Experience" value={formData.yoe} onChange={handleInputChange} required min="0" disabled={loading} />
+                    <div className={styles.inputRow}>
+                      <div className={styles.inputGroup}>
+                        <label>Doctor Full Name</label>
+                        <input type="text" name="doctorName" placeholder="Dr. John Smith" value={formData.doctorName} onChange={handleInputChange} required disabled={loading} />
+                      </div>
+                      <div className={styles.inputGroup}>
+                        <label>Specialization</label>
+                        <input type="text" name="specialization" placeholder="e.g. Interventional Cardiology" value={formData.specialization} onChange={handleInputChange} required disabled={loading} />
+                      </div>
+                    </div>
+                    <div className={styles.inputRow}>
+                      <div className={styles.inputGroup}>
+                        <label>Department</label>
+                        <select
+                          name="deptId"
+                          value={formData.deptId || ""}
+                          onChange={(e) => {
+                            handleInputChange(e);
+                            onDeptChange(e.target.value);
+                          }}
+                          disabled={loading}
+                          required
+                          style={{ padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                        >
+                          <option value="">-- Select Department --</option>
+                          {departments.map((d) => (
+                            <option key={d.departmentId} value={d.departmentId}>
+                              {d.departmentName} (ID: #{d.departmentId})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className={styles.inputGroup}>
+                        <label>Sub-Department Division</label>
+                        <select
+                          name="subDeptId"
+                          value={formData.subDeptId || ""}
+                          onChange={handleInputChange}
+                          disabled={loading || !formData.deptId}
+                          required
+                          style={{ padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
+                        >
+                          <option value="">-- Select Sub-Division --</option>
+                          {subDepartments.map((sd) => (
+                            <option key={sd.subDeptId} value={sd.subDeptId}>
+                              {sd.subDeptName} (ID: #{sd.subDeptId})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className={styles.inputRow}>
+                      <div className={styles.inputGroup}>
+                        <label>Contact Number</label>
+                        <input type="text" name="contact" placeholder="10-digit Phone Number" value={formData.contact} onChange={handleInputChange} required pattern="\d{10}" disabled={loading} />
+                      </div>
+                      <div className={styles.inputGroup}>
+                        <label>Years of Experience</label>
+                        <input type="number" name="yoe" placeholder="e.g. 12" value={formData.yoe} onChange={handleInputChange} required min="0" disabled={loading} />
+                      </div>
+                    </div>
                     <div className={styles['doctor-action-buttons']}>
-                      <button type="submit" disabled={loading}>
-                        {loading ? (operationMode === "create" ? "Creating..." : "Updating...") : (operationMode === "create" ? "Create Doctor" : "Update Doctor")}
+                      <button type="submit" className={styles.submitBtn} disabled={loading}>
+                        {loading ? (operationMode === "create" ? "Creating..." : "Updating...") : (operationMode === "create" ? "Create Doctor Profile" : "Update Doctor Profile")}
                       </button>
                     </div>
                   </>
@@ -156,29 +251,40 @@ const DoctorContent = React.memo(({
 
       {operationMode === "viewAll" && viewAllMode && (
         <div className={styles['all-doctors-container']}>
-          <h2>All Doctors</h2>
+          <div className={styles.headerRow}>
+            <div>
+              <h2 className={styles.headerTitle}>All Medical Doctors</h2>
+              <div className={styles.headerSubtitle}>Active physician roster and sub-department specializations</div>
+            </div>
+          </div>
           {allDoctors.length > 0 ? (
             <>
               <table className={styles['doctors-table']}>
                 <thead>
                   <tr>
                     <th>ID</th>
-                    <th>Name</th>
+                    <th>Code</th>
+                    <th>Doctor Name</th>
                     <th>Specialization</th>
                     <th>Contact</th>
-                    <th>Years of Experience</th>
-                    <th>Department</th>
+                    <th>Experience</th>
+                    <th>Sub-Dept ID</th>
                   </tr>
                 </thead>
                 <tbody>
                   {allDoctors.map((doctor) => (
                     <tr key={doctor.doctorId}>
-                      <td>{doctor.doctorId}</td>
-                      <td>{doctor.doctorName}</td>
+                      <td className={styles.idCell}>#{doctor.doctorId}</td>
+                      <td>{doctor.doctorCode || "N/A"}</td>
+                      <td className={styles.nameCell}>{doctor.doctorName}</td>
                       <td>{doctor.specialization}</td>
                       <td>{doctor.contact}</td>
-                      <td>{doctor.yoe}</td>
-                      <td>{doctor.departmentName || "N/A"}</td>
+                      <td>{doctor.yoe} yrs</td>
+                      <td>
+                        <span className={styles.deptBadge}>
+                          {doctor.subDeptId ? `Sub-Dept #${doctor.subDeptId}` : "General"}
+                        </span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -190,7 +296,7 @@ const DoctorContent = React.memo(({
               </div>
             </>
           ) : (
-            <p>No doctors available.</p>
+            <p className={styles.emptyMessage}>No doctors available.</p>
           )}
         </div>
       )}
@@ -240,7 +346,11 @@ const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewA
     specialization: "",
     contact: "",
     yoe: "",
+    deptId: "",
+    subDeptId: "",
   });
+  const [departments, setDepartments] = useState([]);
+  const [subDepartments, setSubDepartments] = useState([]);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [createdDoctor, setCreatedDoctor] = useState(null);
@@ -253,8 +363,32 @@ const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewA
   const [sortBy] = useState("doctorId");
 
   const userRole = localStorage.getItem("role") || "patient";
-
   const isAdminRole = ["admin", "super-admin", "ADMIN", "SUPER_ADMIN"].includes(userRole);
+
+  useEffect(() => {
+    const fetchDeptList = async () => {
+      try {
+        const res = await api.get("/api/departments");
+        setDepartments(Array.isArray(res.data) ? res.data : []);
+      } catch (e) {
+        setDepartments([]);
+      }
+    };
+    fetchDeptList();
+  }, []);
+
+  const handleDeptChange = useCallback(async (deptId) => {
+    if (!deptId) {
+      setSubDepartments([]);
+      return;
+    }
+    try {
+      const res = await api.get(`/admin/sub-departments/by-department/${deptId}`);
+      setSubDepartments(Array.isArray(res.data) ? res.data : []);
+    } catch (e) {
+      setSubDepartments([]);
+    }
+  }, []);
 
   const fetchAllDoctors = useCallback(async (page = currentPage) => {
     if (!isAdminRole) {
@@ -283,7 +417,7 @@ const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewA
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize, sortBy, userRole]);
+  }, [currentPage, pageSize, sortBy, isAdminRole]);
 
   const handlePreviousPage = useCallback(() => {
     if (currentPage > 0) fetchAllDoctors(currentPage - 1);
@@ -294,10 +428,10 @@ const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewA
   }, [currentPage, totalPages, fetchAllDoctors]);
 
   const resetForm = useCallback(() => {
-    setFormData({ doctorName: "", specialization: "", contact: "", yoe: "" });
+    setFormData({ doctorName: "", specialization: "", contact: "", yoe: "", deptId: "", subDeptId: "" });
     setDoctorId(null);
     setCreatedDoctor(null);
-    setMessage(""); // Ensure message is cleared here too
+    setMessage("");
     setDoctorFetched(false);
     if (operationMode !== "viewAll") {
       setAllDoctors([]);
@@ -308,7 +442,7 @@ const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewA
   }, [operationMode]);
 
   const handleOperation = useCallback((mode) => {
-    setMessage(""); // Clear message when switching operations
+    setMessage("");
     setOperationMode(mode);
     resetForm();
     setViewAllMode(mode === "viewAll");
@@ -331,7 +465,12 @@ const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewA
           specialization: response.data.specialization,
           contact: response.data.contact,
           yoe: response.data.yoe,
+          deptId: response.data.deptId || "",
+          subDeptId: response.data.subDeptId || "",
         });
+        if (response.data.deptId) {
+          handleDeptChange(response.data.deptId);
+        }
         setDoctorFetched(true);
         setMessage("Doctor details fetched successfully");
       } else {
@@ -344,7 +483,7 @@ const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewA
     } finally {
       setLoading(false);
     }
-  }, [doctorId]);
+  }, [doctorId, handleDeptChange]);
 
   const handleInputChange = useCallback((e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -359,14 +498,20 @@ const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewA
       return;
     }
     try {
+      const payload = {
+        ...formData,
+        deptId: formData.deptId ? Number(formData.deptId) : null,
+        subDeptId: formData.subDeptId ? Number(formData.subDeptId) : null,
+        yoe: Number(formData.yoe),
+      };
       let response;
       if (operationMode === "update" && doctorId) {
-        response = await api.put(`/doctors/updateDoctor/${doctorId}`, formData);
+        response = await api.put(`/doctors/updateDoctor/${doctorId}`, payload);
         setMessage("Doctor updated successfully");
         setCreatedDoctor(response.data);
         setDoctorFetched(false);
       } else if (operationMode === "create") {
-        response = await api.post("/doctors/addDoctor", formData);
+        response = await api.post("/doctors/addDoctor", payload);
         setDoctorId(response.data.doctorId);
         setMessage(`Doctor created successfully with ID: ${response.data.doctorId}`);
         setCreatedDoctor(response.data);
@@ -403,9 +548,8 @@ const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewA
     setDoctorId(id);
   }, []);
 
-  // Ensure message clears when operationMode changes
   useEffect(() => {
-    setMessage(""); // Clear message whenever operationMode changes
+    setMessage("");
   }, [operationMode]);
 
   useEffect(() => {
@@ -512,7 +656,7 @@ const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewA
               )}
               {allowedOperations.includes("prescriptionMy") && (
                 <button onClick={() => handleOperation("prescriptionMy")} disabled={loading}>
-                  My Prescriptions
+                  List Prescriptions
                 </button>
               )}
             </div>
@@ -536,31 +680,35 @@ const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewA
             handlePreviousPage={handlePreviousPage}
             handleNextPage={handleNextPage}
             setDoctorId={setDoctorIdCallback}
+            departments={departments}
+            subDepartments={subDepartments}
+            onDeptChange={handleDeptChange}
           />
         </div>
       ) : (
-        <div className={`${styles['right-panel']} ${styles['full-width-content']}`} style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-          <DoctorContent
-            operationMode={operationMode}
-            doctorId={doctorId}
-            formData={formData}
-            createdDoctor={createdDoctor}
-            doctorFetched={doctorFetched}
-            allDoctors={allDoctors}
-            viewAllMode={viewAllMode}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            loading={loading}
-            message={message}
-            handleSubmit={handleSubmit}
-            handleInputChange={handleInputChange}
-            fetchDoctor={fetchDoctor}
-            handleDeleteDoctor={handleDeleteDoctor}
-            handlePreviousPage={handlePreviousPage}
-            handleNextPage={handleNextPage}
-            setDoctorId={setDoctorIdCallback}
-          />
-        </div>
+        <DoctorContent
+          operationMode={operationMode}
+          doctorId={doctorId}
+          formData={formData}
+          createdDoctor={createdDoctor}
+          doctorFetched={doctorFetched}
+          allDoctors={allDoctors}
+          viewAllMode={viewAllMode}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          loading={loading}
+          message={message}
+          handleSubmit={handleSubmit}
+          handleInputChange={handleInputChange}
+          fetchDoctor={fetchDoctor}
+          handleDeleteDoctor={handleDeleteDoctor}
+          handlePreviousPage={handlePreviousPage}
+          handleNextPage={handleNextPage}
+          setDoctorId={setDoctorIdCallback}
+          departments={departments}
+          subDepartments={subDepartments}
+          onDeptChange={handleDeptChange}
+        />
       )}
     </div>
   );

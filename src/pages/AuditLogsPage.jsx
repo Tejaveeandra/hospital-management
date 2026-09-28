@@ -23,17 +23,20 @@ const AuditLogsPage = () => {
   const fetchAuditLogs = async () => {
     setLoading(true);
     try {
-
       const res = await api.get('/audit/all');
-      setLogs(Array.isArray(res.data) ? res.data : []);
+      if (Array.isArray(res.data)) {
+        const formatted = res.data.map((item, idx) => ({
+          ...item,
+          id: item.id || idx + 1,
+          timestamp: item.timestamp ? item.timestamp.replace('T', ' ').substring(0, 19) : ''
+        }));
+        setLogs(formatted);
+      } else {
+        setLogs([]);
+      }
     } catch (e) {
-      // Fallback telemetry stream display for demonstration
-      setLogs([
-        { id: 1001, timestamp: '2026-09-11 12:10:48', userId: 'admin_user', userRole: 'SUPER_ADMIN', action: 'GET', serviceName: 'audit-service', endpoint: '/audit/all', ipAddress: '127.0.0.1', status: 'SUCCESS', accessType: 'GATEWAY' },
-        { id: 1002, timestamp: '2026-09-11 12:08:15', userId: 'doctor_102', userRole: 'DOCTOR', action: 'POST', serviceName: 'prescription-service', endpoint: '/api/prescriptions', ipAddress: '192.168.1.45', status: 'SUCCESS', accessType: 'GATEWAY' },
-        { id: 1003, timestamp: '2026-09-11 12:05:01', userId: 'patient_55', userRole: 'PATIENT', action: 'POST', serviceName: 'appointment-service', endpoint: '/appointments', ipAddress: '192.168.1.88', status: 'SUCCESS', accessType: 'GATEWAY' },
-        { id: 1004, timestamp: '2026-09-11 11:59:30', userId: 'auth_guest', userRole: 'UNAUTHORIZED', action: 'POST', serviceName: 'auth-service', endpoint: '/users/login', ipAddress: '10.0.0.12', status: 'FAIL', accessType: 'GATEWAY' },
-      ]);
+      console.error("Error fetching live audit logs", e);
+      setLogs([]);
     } finally {
       setLoading(false);
     }
@@ -68,7 +71,7 @@ const AuditLogsPage = () => {
         </button>
       </div>
 
-      <div style={{ marginBottom: '20px' }}>
+      <div className={styles.widgetWrapper}>
         <AuditWidget totalLogs={logs.length} kafkaStatus="ACTIVE" />
       </div>
 
@@ -82,7 +85,7 @@ const AuditLogsPage = () => {
         />
       </div>
 
-      <div className="glass-card" style={{ padding: '0', overflow: 'hidden' }}>
+      <div className={`glass-card ${styles.tableCard}`}>
         <table className={styles.table}>
           <thead>
             <tr>

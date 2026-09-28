@@ -131,8 +131,8 @@ api.interceptors.response.use(
         // Skip auto-redirect if this was a login request (let the login page show the error)
         const isLoginRequest = error.config && error.config.url && error.config.url.includes('/users/login');
         
-        if (!isLoginRequest && error.response && (error.response.status === 403 || error.response.status === 401)) {
-            console.warn('[GATEWAY] Session expired or unauthorized.');
+        if (!isLoginRequest && error.response && error.response.status === 401) {
+            console.warn('[GATEWAY] Session expired or unauthenticated.');
             localStorage.removeItem('token');
             localStorage.removeItem('_raja_t');
             localStorage.removeItem('role');

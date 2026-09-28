@@ -45,8 +45,8 @@ const SelectDropdown = ({
           )}
           {options.map((opt, idx) => {
             const isObj = typeof opt === 'object' && opt !== null;
-            const optValue = isObj ? opt.value : opt;
-            const optLabel = isObj ? opt.label : opt;
+            const optValue = isObj ? (opt.value !== undefined ? opt.value : (opt.id || opt.departmentId || opt.branchId || opt.roleId)) : opt;
+            const optLabel = isObj ? (opt.label || opt.name || opt.departmentName || opt.branchName || opt.roleName || opt.value) : opt;
             return (
               <option key={idx} value={optValue}>
                 {optLabel}

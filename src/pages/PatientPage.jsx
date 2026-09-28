@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import api from "../api/api";
-import { useNavigate } from "react-router-dom";
+import { UserPlus, Search } from "lucide-react";
 import styles from "./PatientPage.module.css";
-import AppointmentManagement, { AppointmentOperation } from "./AppointmentPage";
+import AppointmentManagement from "./AppointmentPage";
 
 const PatientPage = ({ initialOperation, isEmbedded = false }) => {
   const [operationMode, setOperationMode] = useState(initialOperation || "");
@@ -231,38 +231,80 @@ const PatientPage = ({ initialOperation, isEmbedded = false }) => {
 
         {operationMode === "create" && (
           <div className={styles['form-container']}>
-            <h3>Create Patient</h3>
+            <div className={styles.headerRow}>
+              <div>
+                <h3 className={styles.headerTitle}>Register New Patient</h3>
+                <div className={styles.headerSubtitle}>Enter patient personal details, medical condition, and visit date</div>
+              </div>
+            </div>
             <form onSubmit={handleSubmit}>
-              <label>Patient Name:</label>
-              <input name="patientName" value={formData.patientName} onChange={handleInputChange} required />
-              <label>Contact:</label>
-              <input name="contact" value={formData.contact} onChange={handleInputChange} required />
-              <label>Age:</label>
-              <input name="age" value={formData.age} onChange={handleInputChange} required />
-              <label>Gender:</label>
-              <select name="gender" value={formData.gender} onChange={handleInputChange} required>
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
-              <label>Disease:</label>
-              <input name="disease" value={formData.disease} onChange={handleInputChange} required />
-              <label>Date:</label>
-              <input type="date" name="date" value={formData.date} onChange={handleInputChange} required />
-              <label>Previous Medication:</label>
-              <textarea name="prevMedication" value={formData.prevMedication} onChange={handleInputChange} />
-              <button type="submit" disabled={loading}>Create</button>
+              <div className={styles.inputRow}>
+                <div className={styles.inputGroup}>
+                  <label>Patient Full Name</label>
+                  <input name="patientName" placeholder="e.g. John Doe" value={formData.patientName} onChange={handleInputChange} required />
+                </div>
+                <div className={styles.inputGroup}>
+                  <label>Contact Number</label>
+                  <input name="contact" placeholder="+1 (555) 000-0000" value={formData.contact} onChange={handleInputChange} required />
+                </div>
+              </div>
+
+              <div className={styles.inputRow}>
+                <div className={styles.inputGroup}>
+                  <label>Age</label>
+                  <input type="number" name="age" placeholder="e.g. 35" value={formData.age} onChange={handleInputChange} required />
+                </div>
+                <div className={styles.inputGroup}>
+                  <label>Gender</label>
+                  <select name="gender" value={formData.gender} onChange={handleInputChange} required>
+                    <option value="">Select Gender...</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className={styles.inputRow}>
+                <div className={styles.inputGroup}>
+                  <label>Diagnosis / Disease</label>
+                  <input name="disease" placeholder="e.g. General Checkup, Hypertension" value={formData.disease} onChange={handleInputChange} required />
+                </div>
+                <div className={styles.inputGroup}>
+                  <label>Registration Date</label>
+                  <input type="date" name="date" value={formData.date} onChange={handleInputChange} required />
+                </div>
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label>Previous Medical History / Medication</label>
+                <textarea name="prevMedication" placeholder="Enter any previous medications, allergies, or health conditions..." value={formData.prevMedication} onChange={handleInputChange} />
+              </div>
+
+              <button type="submit" className={styles.submitBtn} disabled={loading}>
+                <UserPlus size={16} /> Create Patient Record
+              </button>
             </form>
           </div>
         )}
 
         {operationMode === "view" && (
           <div className={styles['form-container']}>
-            <h3>View Patient Details</h3>
-            <label>Patient ID:</label>
-            <input value={patientId || ""} onChange={(e) => setPatientId(e.target.value)} />
-            <button onClick={fetchPatient} disabled={loading}>Fetch Details</button>
+            <div className={styles.headerRow}>
+              <div>
+                <h3 className={styles.headerTitle}>View Patient Details</h3>
+                <div className={styles.headerSubtitle}>Look up patient profile and medical history by Patient UHID</div>
+              </div>
+            </div>
+            <div className={`${styles.inputRow} ${styles.alignEnd}`}>
+              <div className={styles.inputGroup}>
+                <label>Patient UHID / ID</label>
+                <input type="text" placeholder="Enter Patient UHID (e.g. UHID-2026-001)" value={patientId || ""} onChange={(e) => setPatientId(e.target.value)} />
+              </div>
+              <button type="button" className={`${styles.submitBtn} ${styles.btnNoMargin}`} onClick={fetchPatient} disabled={loading}>
+                <Search size={16} /> Fetch Details
+              </button>
+            </div>
 
             {patientFetched && (
               <>
@@ -277,7 +319,7 @@ const PatientPage = ({ initialOperation, isEmbedded = false }) => {
                   <p><strong>Previous Medication:</strong> {formData.prevMedication}</p>
                 </div>
                 {patientPrescriptions.length > 0 && (
-                  <div className={styles['patient-details']} style={{ marginTop: '16px' }}>
+                  <div className={`${styles['patient-details']} ${styles.detailsMargin}`}>
                     <h4>Prescriptions for this patient</h4>
                     <table className={styles['patients-table']}>
                       <thead>
@@ -306,7 +348,12 @@ const PatientPage = ({ initialOperation, isEmbedded = false }) => {
 
         {operationMode === "viewAll" && (
           <div className={styles['all-patients-container']}>
-            <h3>All Patients</h3>
+            <div className={styles.headerRow}>
+              <div>
+                <h3 className={styles.headerTitle}>All Registered Patients</h3>
+                <div className={styles.headerSubtitle}>Complete patient directory and medical records</div>
+              </div>
+            </div>
             {allPatients.length > 0 ? (
               <>
                 <table className={styles['patients-table']}>
@@ -325,14 +372,18 @@ const PatientPage = ({ initialOperation, isEmbedded = false }) => {
                   <tbody>
                     {allPatients.map((patient) => (
                       <tr key={patient.patientId}>
-                        <td>{patient.patientId}</td>
-                        <td>{patient.patientName}</td>
+                        <td className={styles.idCell}>#{patient.patientId}</td>
+                        <td className={styles.nameCell}>{patient.patientName}</td>
                         <td>{patient.contact}</td>
-                        <td>{patient.age}</td>
-                        <td>{patient.gender}</td>
+                        <td>{patient.age} yrs</td>
+                        <td>
+                          <span className={`${styles.genderBadge} ${patient.gender === 'Male' ? styles.genderMale : patient.gender === 'Female' ? styles.genderFemale : styles.genderOther}`}>
+                            {patient.gender || 'N/A'}
+                          </span>
+                        </td>
                         <td>{patient.disease}</td>
                         <td>{patient.date}</td>
-                        <td>{patient.prevMedication}</td>
+                        <td>{patient.prevMedication || '—'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -350,40 +401,76 @@ const PatientPage = ({ initialOperation, isEmbedded = false }) => {
                 </div>
               </>
             ) : (
-              <p>No patients available.</p>
+              <p className={styles.emptyMessage}>No patients available.</p>
             )}
           </div>
         )}
 
         {operationMode === "update" && (
           <div className={styles['form-container']}>
-            <h3>Update Patient Details</h3>
-            <label>Patient ID:</label>
-            <input value={patientId || ""} onChange={(e) => setPatientId(e.target.value)} />
-            <button onClick={fetchPatient} disabled={loading}>Fetch Details</button>
+            <div className={styles.headerRow}>
+              <div>
+                <h3 className={styles.headerTitle}>Update Patient Details</h3>
+                <div className={styles.headerSubtitle}>Fetch patient record by ID and edit details</div>
+              </div>
+            </div>
+            <div className={`${styles.inputRow} ${styles.alignEnd}`}>
+              <div className={styles.inputGroup}>
+                <label>Patient ID</label>
+                <input placeholder="Enter Patient ID (e.g. 101)" value={patientId || ""} onChange={(e) => setPatientId(e.target.value)} />
+              </div>
+              <button type="button" className={`${styles.submitBtn} ${styles.btnNoMargin}`} onClick={fetchPatient} disabled={loading}>
+                <Search size={16} /> Fetch Details
+              </button>
+            </div>
             {patientFetched && (
               <form onSubmit={handleSubmit}>
-                {/* Re-use inputs or similar structure to create form */}
-                <label>Patient Name:</label>
-                <input name="patientName" value={formData.patientName} onChange={handleInputChange} />
-                <label>Contact:</label>
-                <input name="contact" value={formData.contact} onChange={handleInputChange} />
-                <label>Age:</label>
-                <input name="age" value={formData.age} onChange={handleInputChange} />
-                <label>Gender:</label>
-                <select name="gender" value={formData.gender} onChange={handleInputChange}>
-                  <option value="">Select Gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-                <label>Disease:</label>
-                <input name="disease" value={formData.disease} onChange={handleInputChange} />
-                <label>Date:</label>
-                <input type="date" name="date" value={formData.date} onChange={handleInputChange} />
-                <label>Previous Medication:</label>
-                <textarea name="prevMedication" value={formData.prevMedication} onChange={handleInputChange} />
-                <button type="submit" disabled={loading}>Update</button>
+                <div className={styles.inputRow}>
+                  <div className={styles.inputGroup}>
+                    <label>Patient Full Name</label>
+                    <input name="patientName" value={formData.patientName} onChange={handleInputChange} required />
+                  </div>
+                  <div className={styles.inputGroup}>
+                    <label>Contact Number</label>
+                    <input name="contact" value={formData.contact} onChange={handleInputChange} required />
+                  </div>
+                </div>
+
+                <div className={styles.inputRow}>
+                  <div className={styles.inputGroup}>
+                    <label>Age</label>
+                    <input type="number" name="age" value={formData.age} onChange={handleInputChange} required />
+                  </div>
+                  <div className={styles.inputGroup}>
+                    <label>Gender</label>
+                    <select name="gender" value={formData.gender} onChange={handleInputChange} required>
+                      <option value="">Select Gender...</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className={styles.inputRow}>
+                  <div className={styles.inputGroup}>
+                    <label>Diagnosis / Disease</label>
+                    <input name="disease" value={formData.disease} onChange={handleInputChange} required />
+                  </div>
+                  <div className={styles.inputGroup}>
+                    <label>Registration Date</label>
+                    <input type="date" name="date" value={formData.date} onChange={handleInputChange} required />
+                  </div>
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label>Previous Medical History / Medication</label>
+                  <textarea name="prevMedication" value={formData.prevMedication} onChange={handleInputChange} />
+                </div>
+
+                <button type="submit" className={styles.submitBtn} disabled={loading}>
+                  <UserPlus size={16} /> Update Patient Record
+                </button>
               </form>
             )}
           </div>
@@ -394,6 +481,7 @@ const PatientPage = ({ initialOperation, isEmbedded = false }) => {
           <AppointmentManagement
             user={user}
             allowedOperations={["Create Appointment", "View Appointment by ID", "Reschedule Appointment", "Cancel Appointment"]}
+            operationMode="Create Appointment"
             isEmbedded={isEmbedded}
           />
         )}

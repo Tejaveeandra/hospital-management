@@ -137,6 +137,7 @@ const Sidebar = () => {
               subItems={[
                 { label: 'View All Users', op: 'viewAll' },
                 { label: 'Register Staff / Admin', op: 'createAdmin' },
+                { label: 'Create / Manage Roles', op: 'createRole' },
               ]}
             />
 
@@ -185,6 +186,8 @@ const Sidebar = () => {
               subItems={[
                 { label: 'List Departments', op: 'List Departments' },
                 { label: 'Add Department', op: 'Add Department' },
+                { label: 'View / Manage Branches', op: 'List Branches' },
+                { label: 'Create New Branch', op: 'Add Branch' },
                 { label: 'Doctors by Department', op: 'Doctors by Department' },
               ]}
             />
@@ -208,6 +211,8 @@ const Sidebar = () => {
               subItems={[
                 { label: 'List Store Inventory', op: 'List Medicine Store' },
                 { label: 'Add Medicine Stock', op: 'Add to Store' },
+                { label: 'Update Store Item', op: 'Update Store Item' },
+                { label: 'Remove Medicine', op: 'Delete from Store' },
               ]}
             />
 
@@ -218,7 +223,9 @@ const Sidebar = () => {
               label="Hospital Charges"
               subItems={[
                 { label: 'List Fee Schedules', op: 'List Charges' },
+                { label: 'Add Fee Schedule', op: 'Add Charge' },
                 { label: 'Update Fee Schedule', op: 'Update Charge' },
+                { label: 'Delete Fee Schedule', op: 'Delete Charge' },
               ]}
             />
 

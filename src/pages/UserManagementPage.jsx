@@ -3,6 +3,7 @@ import api from "../api/api";
 import styles from "./UserManagementPage.module.css";
 import { CheckCircle, XCircle } from 'lucide-react';
 import AddUserForm from "../components/AddUserForm";
+import AddRoleForm from "../components/AddRoleForm";
 
 const UserManagementPage = ({ isEmbedded = false, initialOperation }) => {
   const [operationMode, setOperationMode] = useState(initialOperation || "viewAll");
@@ -207,6 +208,12 @@ const UserManagementPage = ({ isEmbedded = false, initialOperation }) => {
           <AddUserForm 
             onClose={() => setOperationMode("viewAll")} 
             onUserAdded={() => fetchAllUsers()} 
+          />
+        )}
+
+        {(operationMode === "createRole" || operationMode === "manageRoles") && (
+          <AddRoleForm 
+            onClose={() => setOperationMode("viewAll")} 
           />
         )}
       </div>

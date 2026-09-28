@@ -62,9 +62,9 @@ const AdminPage = () => {
       case 'prescriptions':
         return <PrescriptionsPage allowedOperations={["List Prescriptions", "Create Prescription", "Update Prescription", "Delete Prescription", "Delete All Prescriptions"]} initialOperation={prescriptionOperation} isEmbedded={true} />;
       case 'medicineStore':
-        return <MedicineStorePage allowedOperations={["List Medicine Store", "Add to Store", "Delete from Store", "Seed Store"]} initialOperation={medicineStoreOperation} isEmbedded={true} />;
+        return <MedicineStorePage allowedOperations={["List Medicine Store", "Add to Store", "Update Store Item", "Delete from Store"]} initialOperation={medicineStoreOperation} isEmbedded={true} />;
       case 'hospitalCharges':
-        return <HospitalChargesPage allowedOperations={["List Charges", "Update Charge", "Seed Charges"]} initialOperation={hospitalChargesOperation} isEmbedded={true} />;
+        return <HospitalChargesPage allowedOperations={["List Charges", "Add Charge", "Update Charge", "Delete Charge"]} initialOperation={hospitalChargesOperation} isEmbedded={true} />;
       default:
         return (
           <div style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '8px' }}>

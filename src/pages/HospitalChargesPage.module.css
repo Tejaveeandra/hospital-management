@@ -1,86 +1,130 @@
+/* Modern SaaS Styling for Hospital Charges Page */
+
 .container {
-  padding: 16px;
-  font-family: Arial, sans-serif;
+  padding: 24px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #0f172a;
+  background-color: #f8fafc;
+  min-height: 100vh;
 }
 
 .title {
-  color: #2c3e50;
-  margin-bottom: 16px;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #3498db;
+  color: #0f172a;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e2e8f0;
+  letter-spacing: -0.02em;
 }
 
 .loading {
-  color: #7f8c8d;
-  margin-bottom: 12px;
+  color: #64748b;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
 }
 
 .section {
-  background: #fff;
-  padding: 16px;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
 }
 
 .section h3 {
-  color: #34495e;
-  margin-bottom: 12px;
-  font-size: 1.1rem;
+  color: #1e293b;
+  margin-bottom: 16px;
+  font-size: 1.15rem;
+  font-weight: 600;
 }
 
 .section label {
   display: block;
-  margin-bottom: 4px;
-  color: #2c3e50;
+  margin-bottom: 6px;
+  color: #475569;
+  font-weight: 500;
+  font-size: 0.875rem;
 }
 
 .section input {
-  padding: 8px 12px;
-  margin-bottom: 12px;
-  margin-right: 8px;
-  border: 1px solid #bdc3c7;
-  border-radius: 4px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  margin-right: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
   max-width: 280px;
+  font-size: 0.9rem;
+  background-color: #f8fafc;
+  transition: all 0.2s ease;
+}
+
+.section input:focus {
+  outline: none;
+  border-color: #2563eb;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .section button {
-  padding: 8px 16px;
-  margin-right: 8px;
-  margin-bottom: 8px;
-  background-color: #3498db;
+  padding: 10px 20px;
+  margin-right: 10px;
+  margin-bottom: 10px;
+  background-color: #2563eb;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .section button:hover {
-  background-color: #2980b9;
+  background-color: #1d4ed8;
+  transform: translateY(-1px);
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 12px;
+  margin-top: 16px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .table th,
 .table td {
-  border: 1px solid #bdc3c7;
-  padding: 8px 12px;
+  padding: 12px 16px;
   text-align: left;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.9rem;
 }
 
 .table th {
-  background-color: #ecf0f1;
-  color: #2c3e50;
+  background-color: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.table tr:hover {
+  background-color: #f8fafc;
 }
 
 .message {
-  margin-top: 12px;
-  padding: 8px 12px;
-  background: #e8f5e9;
-  color: #2e7d32;
-  border-radius: 4px;
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.875rem;
 }
+

@@ -55,6 +55,24 @@
   max-width: 480px;
 }
 
+.widgetWrapper {
+  margin-bottom: 20px;
+}
+
+.tableCard {
+  padding: 0;
+  overflow: hidden;
+}
+
+.cardPadded {
+  padding: 24px;
+}
+
+.fullWidthBtn {
+  width: 100%;
+  margin-top: 12px;
+}
+
 .gridTwo {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -197,6 +215,36 @@
   min-height: 60vh;
   text-align: center;
   padding: 40px;
+}
+
+.inlineFormCard {
+  background: var(--bg-surface, #ffffff);
+  border-radius: 16px;
+  padding: 24px 28px;
+  width: 100%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color, #e2e8f0);
+  margin-bottom: 24px;
+}
+
+.formHeaderRow {
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color, #f1f5f9);
+}
+
+.formHeaderRow h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  margin: 0 0 4px 0;
+}
+
+.formActionsRow {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
 }
 
 .modalOverlay {

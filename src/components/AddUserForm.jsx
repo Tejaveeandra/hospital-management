@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styles from "./AddUserForm.module.css";
-import { X, Shield, Phone, Heart, Eye, EyeOff, UserPlus, CheckCircle2, Stethoscope, Crown, Activity, User } from 'lucide-react';
+import { Shield, Phone, Heart, UserPlus, CheckCircle2, Stethoscope, Crown, Activity, User } from 'lucide-react';
 import api from "../api/api";
 
 const roleMeta = {
@@ -76,11 +76,8 @@ const AddUserForm = ({ onClose, onUserAdded }) => {
     username: "",
     email: "",
     phone: "",
-    role: "", 
-    department: "",
-    password: ""
+    role: ""
   });
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [roles, setRoles] = useState([]);
@@ -121,7 +118,6 @@ const AddUserForm = ({ onClose, onUserAdded }) => {
       const payload = {
         username: formData.username,
         email: formData.email,
-        password: formData.password,
         role: formData.role,
         phone: formData.phone
       };
@@ -145,8 +141,8 @@ const AddUserForm = ({ onClose, onUserAdded }) => {
   const selectedMeta = roleMeta[formData.role];
 
   return (
-    <div className={styles.modalBackdrop}>
-      <div className={styles.modalContainer}>
+    <div className={styles.formContainerWrapper}>
+      <div className={styles.formCard}>
         
         {/* Left Sidebar - Preview */}
         <div className={styles.previewSidebar}>
@@ -201,12 +197,9 @@ const AddUserForm = ({ onClose, onUserAdded }) => {
               <h2 className={styles.formTitle}>Register System User</h2>
               <div className={styles.formSubtitle}>MedCenter / Admin / Users</div>
             </div>
-            <button type="button" className={styles.closeButton} onClick={onClose}>
-              <X size={20} />
-            </button>
           </div>
 
-          <form className={styles.formBody} onSubmit={handleSubmit}>
+          <form id="addUserForm" className={styles.formBody} onSubmit={handleSubmit}>
             {error && <div className={styles.errorMessage}>{error}</div>}
             
             <div className={styles.inputRow}>
@@ -266,37 +259,17 @@ const AddUserForm = ({ onClose, onUserAdded }) => {
                 })}
               </div>
             </div>
-
-            {/* Department Dropdown for DOCTOR and RECEPTIONIST */}
-            {(formData.role === 'DOCTOR' || formData.role === 'RECEPTIONIST') && (
-              <div className={styles.inputGroup}>
-                <label>Department</label>
-                <select 
-                  name="department" 
-                  value={formData.department} 
-                  onChange={handleInputChange} 
-                  className={styles.dropdown}
-                  required
-                >
-                  <option value="">Select department...</option>
-                  <option value="Cardiology">Cardiology</option>
-                  <option value="Neurology">Neurology</option>
-                  <option value="Orthopedics">Orthopedics</option>
-                  <option value="General">General</option>
-                </select>
-              </div>
-            )}
-            
-            <div className={styles.formFooter}>
-              <div className={styles.footerText}>A welcome email with credentials will be sent automatically.</div>
-              <div className={styles.footerActions}>
-                <button type="button" className={styles.cancelBtn} onClick={onClose}>Cancel</button>
-                <button type="submit" className={styles.submitBtn} disabled={loading}>
-                  <UserPlus size={16} /> Create User
-                </button>
-              </div>
-            </div>
           </form>
+
+          <div className={styles.formFooter}>
+            <div className={styles.footerText}>A welcome email with credentials will be sent automatically.</div>
+            <div className={styles.footerActions}>
+              <button type="button" className={styles.cancelBtn} onClick={onClose}>Cancel</button>
+              <button type="submit" form="addUserForm" className={styles.submitBtn} disabled={loading}>
+                <UserPlus size={16} /> Create User
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -304,3 +277,4 @@ const AddUserForm = ({ onClose, onUserAdded }) => {
 };
 
 export default AddUserForm;
+
