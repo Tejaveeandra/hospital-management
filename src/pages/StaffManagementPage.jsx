@@ -428,9 +428,11 @@ const StaffManagementPage = () => {
         </>
       )}
 
+            </>
+      )}
+
       {showModal && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modalContent} style={{ maxWidth: '800px', width: '90%' }}>
+        <div className={styles.inlineFormCard}>
           <div className={styles.formHeaderRow}>
             <h3>Onboard New Staff Member</h3>
             <p className={styles.fontMuted}>Enter official employee contact, employment type, and department role details</p>
@@ -585,7 +587,6 @@ const StaffManagementPage = () => {
               </button>
             </div>
           </form>
-          </div>
         </div>
       )}
     </div>
