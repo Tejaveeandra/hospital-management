@@ -287,7 +287,9 @@ const StaffManagementPage = () => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.pageHeader}>
+      {!showModal ? (
+<>
+<div className={styles.pageHeader}>
         <div>
           <h2 className={styles.title}><UserCog size={24} color="#0284c7" /> HR Staff & Employee Roster</h2>
           <p className={styles.subtitle}>Onboard and manage nurses, receptionists, janitors, and clinical technicians into database table public.staff.</p>
@@ -428,8 +430,6 @@ const StaffManagementPage = () => {
         </>
       )}
 
-            </>
-      )}
 
       {showModal && (
         <div className={styles.inlineFormCard}>
