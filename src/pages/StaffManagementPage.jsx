@@ -11,6 +11,7 @@ const StaffManagementPage = () => {
   const [search, setSearch] = useState('');
   const [message, setMessage] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [activeTab, setActiveTab] = useState('staff');
 
   // Dynamic Dropdown & Branch Summary States
   const [roles, setRoles] = useState([]);
@@ -72,7 +73,7 @@ const StaffManagementPage = () => {
       if (Array.isArray(res.data)) {
         const mapped = res.data.map(b => ({
           label: `${b.branchName || b.name || 'Branch'} (${b.location || b.city || '#' + b.id})`,
-          value: b.id,
+          value: b.branchId || b.id,
           name: b.branchName || b.name
         }));
         setBranches(mapped);
@@ -147,10 +148,10 @@ const StaffManagementPage = () => {
     try {
       const res = await api.get(`/api/departments/branch/${selectedBranchId}`);
       if (Array.isArray(res.data)) {
-        const mapped = res.data.map(d => ({
+        console.log('Departments Response:', res.data); const mapped = res.data.map(d => ({
           label: d.departmentName || d.name || `Department #${d.departmentId || d.id}`,
           value: d.departmentId || d.id,
-          deptName: d.name
+          deptName: d.departmentName || d.name
         }));
         setDepartments(mapped);
       } else {
@@ -347,7 +348,9 @@ const StaffManagementPage = () => {
         </table>
       </div>
 
-      <div className={styles.filterBar}>
+      {activeTab === 'staff' && (
+        <>
+<div className={styles.filterBar}>
         <InputBox
           type="search"
           placeholder="Search staff by name, role, department, or Gov ID..."
@@ -412,9 +415,12 @@ const StaffManagementPage = () => {
           </tbody>
         </table>
       </div>
+        </>
+      )}
 
       {showModal && (
-        <div className={styles.inlineFormCard}>
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent} style={{ maxWidth: '800px', width: '90%' }}>
           <div className={styles.formHeaderRow}>
             <h3>Onboard New Staff Member</h3>
             <p className={styles.fontMuted}>Enter official employee contact, employment type, and department role details</p>
@@ -569,6 +575,7 @@ const StaffManagementPage = () => {
               </button>
             </div>
           </form>
+          </div>
         </div>
       )}
     </div>
