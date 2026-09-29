@@ -10,7 +10,16 @@ const StaffManagementPage = () => {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [message, setMessage] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [showModal, setShowModal] = useState(searchParams.get('op') === 'create');
+
+  useEffect(() => {
+    if (searchParams.get('op') === 'create') {
+      setShowModal(true);
+    } else {
+      setShowModal(false);
+    }
+  }, [searchParams]);
   const [activeTab, setActiveTab] = useState('staff');
 
   // Dynamic Dropdown & Branch Summary States
@@ -81,15 +90,15 @@ const StaffManagementPage = () => {
         // Fetch department summary for each branch
         const summaryPromises = res.data.map(async (b) => {
           try {
-            const deptRes = await api.get(`/api/departments/branch/${b.id}`);
+            const deptRes = await api.get(`/api/departments/branch/${b.branchId || b.id}`);
             const depts = Array.isArray(deptRes.data) ? deptRes.data : [];
             return {
-              id: b.id,
+              id: b.branchId || b.id,
               name: b.branchName || b.name || `Branch #${b.id}`,
-              code: b.code || `BR-${b.id}`,
+              code: b.branchCode || b.code || `BR-${b.branchId || b.id}`,
               location: b.location || b.city || 'Main Campus',
               departmentCount: depts.length,
-              departmentNames: depts.map(d => d.name).join(', ') || 'No departments linked',
+              departmentNames: depts.map(d => d.departmentName || d.name).join(', ') || 'No departments linked',
               departments: depts,
               status: b.status || 'ACTIVE'
             };
@@ -569,7 +578,7 @@ const StaffManagementPage = () => {
             </div>
 
             <div className={styles.formActionsRow}>
-              <button type="button" className="btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
+              <button type="button" className="btn-secondary" onClick={() => { setShowModal(false); setSearchParams({}); }}>Cancel</button>
               <button type="submit" className="btn-primary" disabled={loading}>
                 {loading ? 'Onboarding...' : 'Save & Onboard Member'}
               </button>
