@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Heart, Calendar, DollarSign, AlertTriangle, CheckCircle2, Clock, XCircle, Loader2 } from 'lucide-react';
 import api from '../api/api';
@@ -140,7 +140,7 @@ const AdminDashboardContent = () => {
     <div className={styles.dashboard}>
       <div className={styles.headerInfo}>
         <h1 className={styles.title}>Admin Dashboard</h1>
-        <p className={styles.subtitle}>Welcome back — here's what's happening today based on live API data.</p>
+        <p className={styles.subtitle}>Welcome back â€” here's what's happening today based on live API data.</p>
       </div>
 
       {/* Stats Cards */}
@@ -187,7 +187,7 @@ const AdminDashboardContent = () => {
           </div>
           <div className={styles.statValue}>{lowStockCount}</div>
           <div className={`${styles.statTrend} ${lowStockCount > 0 ? styles.negative : styles.positive}`}>
-            {lowStockCount > 0 ? '↘ Needs reorder' : 'Stock healthy'}
+            {lowStockCount > 0 ? 'â†˜ Needs reorder' : 'Stock healthy'}
           </div>
         </div>
       </div>
@@ -307,3 +307,4 @@ const AdminDashboardContent = () => {
 };
 
 export default AdminDashboardContent;
+

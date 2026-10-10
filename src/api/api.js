@@ -146,3 +146,26 @@ api.interceptors.response.use(
 
 export default api;
 
+export const logoutUser = async () => {
+    const token = localStorage.getItem('token') || localStorage.getItem('_raja_t');
+    const refreshToken = localStorage.getItem('refreshToken');
+
+    try {
+        if (token) {
+            await api.post('/users/logout', {
+                refreshToken: refreshToken || ''
+            });
+            console.log('[AUTH] Token successfully revoked on backend.');
+        }
+    } catch (err) {
+        console.warn('[AUTH] Revoke / Logout call failed:', err.message);
+    } finally {
+        localStorage.removeItem('_raja_t');
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('role');
+        localStorage.removeItem('username');
+        localStorage.removeItem('userId');
+    }
+};
+

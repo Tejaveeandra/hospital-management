@@ -148,6 +148,7 @@ const Login = () => {
       localStorage.setItem('role', data.role.toLowerCase().replace('_', '-'));
       localStorage.setItem('userId', data.userId.toString());
       if (data.token) localStorage.setItem('token', data.token);
+      if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
 
       const role = data.role.toUpperCase();
       if      (role === 'ADMIN')        navigate('/admin');

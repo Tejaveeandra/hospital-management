@@ -1,3 +1,4 @@
+import { logoutUser } from '../api/api';
 import React, { useState } from "react";
 import AdminLayout from "../component/Layout/AdminLayout";
 import AdminDashboardContent from "./AdminDashboardContent";
@@ -25,13 +26,9 @@ const AdminPage = () => {
   const [hospitalChargesOperation, setHospitalChargesOperation] = useState("List Charges");
   const isAdmin = ["admin", "super-admin", "ADMIN", "SUPER_ADMIN"].includes(userRole);
 
-  const handleLogout = () => {
-    localStorage.removeItem('_raja_t');
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
-    localStorage.removeItem('username');
-    localStorage.removeItem('userId');
-    window.location.href = '/';
+  const handleLogout = async () => {
+    await logoutUser();
+    navigate('/');
   };
 
   if (!isAdmin) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import axios from "axios";
 import api from "../api/api";
 import styles from "./AppointmentPage.module.css";
@@ -656,7 +656,7 @@ const AppointmentManagement = ({
                   onChange={handleInputChange}
                   disabled={!formData.subDeptId && !formData.departmentId}
                 >
-                  <option value="">⚡ Any Available Specialist (Smart Auto-Assign)</option>
+                  <option value="">âš¡ Any Available Specialist (Smart Auto-Assign)</option>
                   {doctorsList.map(doc => (
                     <option key={doc.doctorId} value={doc.doctorCode}>
                       {doc.doctorName} ({doc.specialization} - {doc.doctorCode})
@@ -665,8 +665,8 @@ const AppointmentManagement = ({
                 </select>
                 <span style={{ fontSize: "0.8rem", color: "#7f8c8d", display: "block", marginTop: "2px" }}>
                   {formData.preferredDoctorCode 
-                    ? "⚠️ Preferred doctor selected: If doctor is unavailable or on leave, booking will throw error."
-                    : "✨ Auto-Assign: Algorithm will automatically balance load to least busy doctor."}
+                    ? "âš ï¸ Preferred doctor selected: If doctor is unavailable or on leave, booking will throw error."
+                    : "âœ¨ Auto-Assign: Algorithm will automatically balance load to least busy doctor."}
                 </span>
               </div>
 
@@ -780,7 +780,7 @@ const AppointmentManagement = ({
                 className={styles['toggle-search-btn']}
                 onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
               >
-                🔍 Search Past Data
+                ðŸ” Search Past Data
               </button>
               
               {showAdvancedSearch && (

@@ -1,3 +1,4 @@
+import { logoutUser } from '../api/api';
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import styles from "./Navbar.module.css";
@@ -21,12 +22,8 @@ const Navbar = () => {
     return null;
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem('_raja_t');
-    localStorage.removeItem('token'); // Keep for legacy if needed
-    localStorage.removeItem('role');
-    localStorage.removeItem('username');
-    localStorage.removeItem('userId');
+  const handleLogout = async () => {
+    await logoutUser();
     navigate('/');
   };
 
