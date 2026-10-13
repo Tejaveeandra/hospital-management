@@ -287,7 +287,7 @@ const StaffManagementPage = () => {
 
   return (
     <div className={styles.container}>
-      {!showModal ? (
+      {!showModal && (
 <>
 <div className={styles.pageHeader}>
         <div>
@@ -427,6 +427,8 @@ const StaffManagementPage = () => {
           </tbody>
         </table>
       </div>
+        </>
+      )}
         </>
       )}
 

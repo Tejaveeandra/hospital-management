@@ -13,6 +13,7 @@ RUN npm install
 COPY . .
 
 # Build the application
+ENV CI=false
 RUN npm run build
 
 # Stage 2: Serve the application with Nginx

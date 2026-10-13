@@ -6,7 +6,7 @@ import LockoutScreen from './LockoutScreen';
 import WarningPopup from './WarningPopup';
 import ForgotPasswordPage from './ForgotPasswordPage';
 
-/* ─── Constants ─────────────────────────────────────── */
+/* â”€â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const LOCK_KEY         = 'loginLockUntil';
 const LOCK_DURATION_MS = 15 * 60 * 1000;
 const TOTAL_LOCK_SECS  = 15 * 60;
@@ -17,7 +17,7 @@ const getRemainingSeconds = () => {
   return remaining > 0 ? remaining : 0;
 };
 
-/* ─── Hospital icon ─────────────────────────────────── */
+/* â”€â”€â”€ Hospital icon â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const HospitalIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
     strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={styles.logoIcon}>
@@ -25,7 +25,7 @@ const HospitalIcon = () => (
   </svg>
 );
 
-/* ─── Login page ────────────────────────────────────── */
+/* â”€â”€â”€ Login page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const Login = () => {
   const [step, setStep]                     = useState(1);
   const [identifier, setIdentifier]         = useState('');
@@ -47,7 +47,17 @@ const Login = () => {
 
   const navigate = useNavigate();
 
-  /* ── Countdown tick ── */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const reason = params.get('reason');
+    if (reason === 'inactivity') {
+      setError('Session timed out after 15 minutes of inactivity for patient data safety. Please log in again.');
+    } else if (reason === 'expired') {
+      setError('Your session has expired. Please log in again.');
+    }
+  }, []);
+
+  /* â”€â”€ Countdown tick â”€â”€ */
   useEffect(() => {
     let timer;
     if (isLocked && lockCountdown > 0) {
@@ -66,7 +76,7 @@ const Login = () => {
     return () => clearInterval(timer);
   }, [isLocked, lockCountdown]);
 
-  /* ── Handlers ── */
+  /* â”€â”€ Handlers â”€â”€ */
   const handleUnlock = () => {
     localStorage.removeItem(LOCK_KEY);
     setIsLocked(false);
@@ -182,12 +192,12 @@ const Login = () => {
     }
   };
 
-  /* ── Show full-screen lockout if account is locked ── */
+  /* â”€â”€ Show full-screen lockout if account is locked â”€â”€ */
   if (isLocked) {
     return <LockoutScreen lockCountdown={lockCountdown} onUnlock={handleUnlock}/>;
   }
 
-  /* ── Show Forgot Password or Activation screen ── */
+  /* â”€â”€ Show Forgot Password or Activation screen â”€â”€ */
   if (showForgot) {
     return <ForgotPasswordPage 
       onBack={() => setShowForgot(false)} 
@@ -196,7 +206,7 @@ const Login = () => {
     />;
   }
 
-  /* ── Normal login form (2-step) ── */
+  /* â”€â”€ Normal login form (2-step) â”€â”€ */
   return (
     <div className={styles.splitLayout}>
       
@@ -255,7 +265,7 @@ const Login = () => {
                   </div>
                   <input
                     type="password" id="password" name="password"
-                    placeholder="••••••••"
+                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                     value={password} onChange={handleInputChange}
                     className={passwordError ? styles.inputError : ''}
                     autoFocus

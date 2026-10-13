@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
 import AdminLayout from '../component/Layout/AdminLayout';
 import AdminDashboardContent from '../pages/AdminDashboardContent';
@@ -15,9 +15,6 @@ import InsuranceClaimsPage from '../pages/InsuranceClaimsPage';
 import AdvancedPatientSearchPage from '../pages/AdvancedPatientSearchPage';
 import MasterOperationsPage from '../pages/MasterOperationsPage';
 import HRManagementPage from '../pages/HRManagementPage';
-import LeaveApprovalsPage from '../pages/LeaveApprovalsPage';
-import AppointmentManagementPage from '../pages/AppointmentManagementPage';
-import BedAllocationPage from '../pages/BedAllocationPage';
 import StaffManagementPage from '../pages/StaffManagementPage';
 import ShiftManagementPage from '../pages/ShiftManagementPage';
 import AttendanceDashboard from '../pages/AttendanceDashboard';
@@ -39,6 +36,7 @@ const AdminRouteWrapper = () => {
       <Route path="dashboard" element={<AdminDashboardContent />} />
       <Route path="users" element={<UserManagementPage isEmbedded={true} initialOperation={op} key={`users-${op}`} />} />
       <Route path="patients" element={<PatientPage isEmbedded={true} showHeaders={false} initialOperation={op} key={`patients-${op}`} />} />
+      <Route path="patient-search" element={<AdvancedPatientSearchPage />} />
       <Route path="doctors" element={<DoctorPage isEmbedded={true} showHeaders={false} initialOperation={op} key={`doctors-${op}`} />} />
       <Route path="leaves" element={<DoctorLeavePage isEmbedded={true} initialOperation={op} key={`leaves-${op}`} />} />
       <Route path="appointments" element={<AppointmentPage isEmbedded={true} operationMode={op} initialOperation={op} key={`appts-${op}`} />} />
@@ -46,12 +44,19 @@ const AdminRouteWrapper = () => {
       <Route path="prescriptions" element={<PrescriptionsPage isEmbedded={true} initialOperation={op} key={`presc-${op}`} />} />
       <Route path="medicine-store" element={<MedicineStorePage isEmbedded={true} initialOperation={op} key={`med-${op}`} />} />
       <Route path="hospital-charges" element={<HospitalChargesPage isEmbedded={true} initialOperation={op} key={`charges-${op}`} />} />
+      <Route path="insurance-claims" element={<InsuranceClaimsPage />} />
+      <Route path="diagnostics" element={<DiagnosticsPage isEmbedded={true} initialOperation={op} key={`diag-${op}`} />} />
+      <Route path="surgeries" element={<SurgeryPage isEmbedded={true} initialOperation={op} key={`surg-${op}`} />} />
       <Route path="staff" element={<StaffManagementPage />} />
+      <Route path="employment-types" element={<EmploymentTypePage />} />
       <Route path="shifts" element={<ShiftManagementPage />} />
       <Route path="attendance" element={<AttendanceDashboard />} />
       <Route path="audit-logs" element={<AuditLogsPage />} />
       <Route path="beds" element={<BedManagementPage isEmbedded={true} initialOperation={op} key={`beds-${op}`} />} />
       <Route path="facilities" element={<FacilityManagementPage isEmbedded={true} initialOperation={op} key={`fac-${op}`} />} />
+      <Route path="master-console" element={<MasterOperationsPage />} />
+      <Route path="roles" element={<RoleManagementPage />} />
+      <Route path="hr" element={<HRManagementPage initialOperation={op} />} />
       <Route path="*" element={<Navigate to="dashboard" replace />} />
     </Routes>
   );
@@ -66,12 +71,3 @@ const AdminRoutes = () => {
 };
 
 export default AdminRoutes;
-
-
-
-
-
-
-
-
-

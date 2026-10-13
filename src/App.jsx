@@ -5,6 +5,7 @@ import Login from './pages/LoginPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import LockoutScreen from './pages/LockoutScreen';
 import ProtectedRoute from './components/ProtectedRoute';
+import SessionManager from './components/SessionManager';
 
 import AdminRoutes from './routes/AdminRoutes';
 import DoctorRoutes from './routes/DoctorRoutes';
@@ -14,6 +15,7 @@ import ReceptionistRoutes from './routes/ReceptionistRoutes';
 const App = () => {
   return (
     <Router>
+      <SessionManager />
       <Routes>
         {/* Public Authentication Routes */}
         <Route path="/" element={<Login />} />

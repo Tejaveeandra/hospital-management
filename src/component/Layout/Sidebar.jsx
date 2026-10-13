@@ -1,4 +1,4 @@
-﻿import { logoutUser } from '../../api/api';
+import { logoutUser } from '../../api/api';
 import React, { useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -23,8 +23,11 @@ import {
   CalendarPlus,
   ClipboardList,
   Bed,
-  Building2
-, Syringe, Briefcase, KeyRound } from 'lucide-react';
+  Building2,
+  Syringe, 
+  Briefcase, 
+  KeyRound 
+} from 'lucide-react';
 import styles from './Sidebar.module.css';
 
 const Sidebar = () => {
@@ -38,17 +41,20 @@ const Sidebar = () => {
   const isReceptionist = role === 'RECEPTIONIST';
 
   const [expandedMenus, setExpandedMenus] = useState({
-    users: true,
-    patients: false,
-    doctors: false,
-    appointments: false,
-    departments: false,
-    prescriptions: false,
-    medicineStore: false,
-    hospitalCharges: false,
-    beds: false,
-    facilities: false,
-    hr: false,
+    users: location.pathname.includes('/users'),
+    patients: location.pathname.includes('/patients') || location.pathname.includes('/patient-search'),
+    doctors: location.pathname.includes('/doctors'),
+    appointments: location.pathname.includes('/appointments'),
+    departments: location.pathname.includes('/departments'),
+    prescriptions: location.pathname.includes('/prescriptions'),
+    medicineStore: location.pathname.includes('/medicine-store'),
+    hospitalCharges: location.pathname.includes('/hospital-charges') || location.pathname.includes('/insurance-claims'),
+    beds: location.pathname.includes('/beds'),
+    facilities: location.pathname.includes('/facilities'),
+    hr: location.pathname.includes('/staff') || location.pathname.includes('/hr'),
+    diagnostics: location.pathname.includes('/diagnostics'),
+    surgeries: location.pathname.includes('/surgeries'),
+    leaves: location.pathname.includes('/leaves'),
   });
 
   const toggleMenu = (menuKey) => {
@@ -69,6 +75,7 @@ const Sidebar = () => {
     return (
       <div className={styles.navGroup}>
         <button 
+          type="button"
           className={`${styles.navItem} ${isActive ? styles.activeGroup : ''}`}
           onClick={() => toggleMenu(menuKey)}
         >
@@ -81,18 +88,25 @@ const Sidebar = () => {
 
         {isExpanded && (
           <div className={styles.subMenu}>
-            {subItems.map((sub, idx) => (
-              <NavLink
-                key={idx}
-                to={`${basePath}?op=${encodeURIComponent(sub.op)}`}
-                className={({ isActive: isSubActive }) => 
-                  `${styles.subMenuItem} ${location.search.includes(encodeURIComponent(sub.op)) || (isSubActive && !location.search) ? styles.activeSub : ''}`
-                }
-              >
-                <span className={styles.bulletDot} />
-                <span>{sub.label}</span>
-              </NavLink>
-            ))}
+            {subItems.map((sub, idx) => {
+              const linkTo = sub.to || (sub.op ? `${basePath}?op=${encodeURIComponent(sub.op)}` : basePath);
+              const isSubActive = sub.to 
+                ? location.pathname === sub.to 
+                : sub.op 
+                  ? location.search.includes(encodeURIComponent(sub.op)) 
+                  : location.pathname === basePath;
+
+              return (
+                <NavLink
+                  key={idx}
+                  to={linkTo}
+                  className={`${styles.subMenuItem} ${isSubActive ? styles.activeSub : ''}`}
+                >
+                  <span className={styles.bulletDot} />
+                  <span>{sub.label}</span>
+                </NavLink>
+              );
+            })}
           </div>
         )}
       </div>
@@ -144,18 +158,15 @@ const Sidebar = () => {
 
             <AccordionMenuItem
               menuKey="patients"
-              basePath="/admin"
-              onSubItemClick={(item) => {
-                if(item.op === 'search') window.location.href='/admin/patient-search';
-                else window.location.href='/admin/patients?op='+item.op;
-              }}
+              basePath="/admin/patients"
               icon={UserCheck}
               label="Patient Records"
               subItems={[
-                { label: 'Advanced Search', op: 'search' },
-                { label: 'List All Patients', op: 'viewAll' },
                 { label: 'Register New Patient', op: 'create' },
+                { label: 'List All Patients', op: 'viewAll' },
                 { label: 'Search Patient Record', op: 'view' },
+                { label: 'Update Patient Details', op: 'update' },
+                { label: 'Advanced Search', to: '/admin/patient-search' },
               ]}
             />
 
@@ -224,25 +235,42 @@ const Sidebar = () => {
 
             <AccordionMenuItem
               menuKey="hospitalCharges"
-              basePath="/admin"
-              onSubItemClick={(item) => {
-                if(item.op === 'insurance') window.location.href='/admin/insurance-claims';
-              }}
+              basePath="/admin/hospital-charges"
               icon={Receipt}
               label="Hospital Charges"
               subItems={[
-                { label: 'Process Insurance Claim', op: 'insurance' },
                 { label: 'List Fee Schedules', op: 'List Charges' },
                 { label: 'Add Fee Schedule', op: 'Add Charge' },
                 { label: 'Update Fee Schedule', op: 'Update Charge' },
                 { label: 'Delete Fee Schedule', op: 'Delete Charge' },
+                { label: 'Process Insurance Claim', to: '/admin/insurance-claims' },
               ]}
             />
 
-            
-            <AccordionMenuItem menuKey="diagnostics" basePath="/admin/diagnostics" icon={Stethoscope} label="Clinical & Diagnostics" onSubItemClick={(item) => window.location.href='/admin/diagnostics?op='+item.op} subItems={[ { label: 'List Lab Tests', op: 'viewAll' }, { label: 'Add New Lab Test', op: 'create' }, { label: 'Order Lab Test', op: 'order' } ]} />
+            <AccordionMenuItem 
+              menuKey="diagnostics" 
+              basePath="/admin/diagnostics" 
+              icon={Stethoscope} 
+              label="Clinical & Diagnostics" 
+              subItems={[ 
+                { label: 'List Lab Tests', op: 'viewAll' }, 
+                { label: 'Add New Lab Test', op: 'create' }, 
+                { label: 'Order Lab Test', op: 'order' } 
+              ]} 
+            />
 
-            <AccordionMenuItem menuKey="surgeries" basePath="/admin/surgeries" icon={Syringe} label="Surgery Management" onSubItemClick={(item) => window.location.href='/admin/surgeries?op='+item.op} subItems={[ { label: 'List Surgery Catalog', op: 'viewAll' }, { label: 'Add New Procedure', op: 'create' }, { label: 'Update Procedure', op: 'update' }, { label: 'Schedule a Surgery', op: 'schedule' } ]} />
+            <AccordionMenuItem 
+              menuKey="surgeries" 
+              basePath="/admin/surgeries" 
+              icon={Syringe} 
+              label="Surgery Management" 
+              subItems={[ 
+                { label: 'List Surgery Catalog', op: 'viewAll' }, 
+                { label: 'Add New Procedure', op: 'create' }, 
+                { label: 'Update Procedure', op: 'update' }, 
+                { label: 'Schedule a Surgery', op: 'schedule' } 
+              ]} 
+            />
 
             <div className={styles.menuSectionTitle}>INPATIENT & FACILITIES</div>
 
@@ -301,8 +329,25 @@ const Sidebar = () => {
 
             {isSuperAdmin && (
               <>
-                <AccordionMenuItem menuKey="leaves" basePath="/admin/leaves" icon={ShieldAlert} label="Leave Approvals" onSubItemClick={() => window.location.href='/admin/leaves'} subItems={[ { label: 'Review Pending Leaves', op: 'approve' } ]} />
-                <AccordionMenuItem menuKey="hr" basePath="/admin/hr" icon={ShieldAlert} label="HR & Credentials" onSubItemClick={(item) => window.location.href='/admin/hr?op='+item.op} subItems={[ { label: 'Check Credentials', op: 'credentials' }, { label: 'Hire Candidate', op: 'hire' } ]} />
+                <AccordionMenuItem 
+                  menuKey="leaves" 
+                  basePath="/admin/leaves" 
+                  icon={ShieldAlert} 
+                  label="Leave Approvals" 
+                  subItems={[ 
+                    { label: 'Review Pending Leaves', op: 'approve' } 
+                  ]} 
+                />
+                <AccordionMenuItem 
+                  menuKey="hr" 
+                  basePath="/admin/hr" 
+                  icon={ShieldAlert} 
+                  label="HR & Credentials" 
+                  subItems={[ 
+                    { label: 'Check Credentials', op: 'credentials' }, 
+                    { label: 'Hire Candidate', op: 'hire' } 
+                  ]} 
+                />
                 <div className={styles.menuSectionTitle}>SUPER ADMIN SECURITY</div>
                 <NavLink to="/admin/master-console" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
                   <ShieldAlert size={18} color="#0284c7" /> <span style={{ color: "#0284c7", fontWeight: 600 }}>Master API Console</span>
@@ -378,7 +423,8 @@ const Sidebar = () => {
 
       <div className={styles.sidebarFooter}>
         <button onClick={handleLogout} className={styles.logoutBtn}>
-          <LogOut size={18} /> <span>Sign Out</span>
+          <LogOut size={18} />
+          <span>Secure Sign Out</span>
         </button>
       </div>
     </aside>
@@ -386,18 +432,3 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
