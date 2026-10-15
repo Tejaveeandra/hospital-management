@@ -1,4 +1,4 @@
-import axios from 'axios';
+﻿import axios from 'axios';
 import CryptoJS from 'crypto-js';
 
 // Security Keys (Kept for potential individual field encryption)
@@ -252,6 +252,7 @@ export const logoutUser = async (redirect = false, reason = '') => {
         localStorage.removeItem('role');
         localStorage.removeItem('username');
         localStorage.removeItem('userId');
+        localStorage.removeItem('permissions');
 
         if (redirect) {
             window.location.href = reason ? `/?reason=${reason}` : '/';

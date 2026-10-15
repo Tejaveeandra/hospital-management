@@ -16,6 +16,7 @@ import AdvancedPatientSearchPage from '../pages/AdvancedPatientSearchPage';
 import MasterOperationsPage from '../pages/MasterOperationsPage';
 import HRManagementPage from '../pages/HRManagementPage';
 import StaffManagementPage from '../pages/StaffManagementPage';
+import CandidateRecruitmentPage from '../pages/CandidateRecruitmentPage';
 import ShiftManagementPage from '../pages/ShiftManagementPage';
 import AttendanceDashboard from '../pages/AttendanceDashboard';
 import AuditLogsPage from '../pages/AuditLogsPage';
@@ -48,6 +49,8 @@ const AdminRouteWrapper = () => {
       <Route path="diagnostics" element={<DiagnosticsPage isEmbedded={true} initialOperation={op} key={`diag-${op}`} />} />
       <Route path="surgeries" element={<SurgeryPage isEmbedded={true} initialOperation={op} key={`surg-${op}`} />} />
       <Route path="staff" element={<StaffManagementPage />} />
+      <Route path="candidates" element={<CandidateRecruitmentPage />} />
+      <Route path="recruitment" element={<CandidateRecruitmentPage />} />
       <Route path="employment-types" element={<EmploymentTypePage />} />
       <Route path="shifts" element={<ShiftManagementPage />} />
       <Route path="attendance" element={<AttendanceDashboard />} />

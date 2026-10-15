@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './LoginPage.module.css';
 import api from '../api/api';
@@ -159,14 +159,24 @@ const Login = () => {
       localStorage.setItem('userId', data.userId.toString());
       if (data.token) localStorage.setItem('token', data.token);
       if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+      if (data.permissions && Array.isArray(data.permissions)) {
+        localStorage.setItem('permissions', JSON.stringify(data.permissions));
+      } else {
+        localStorage.setItem('permissions', JSON.stringify([]));
+      }
 
-      const role = data.role.toUpperCase();
-      if      (role === 'ADMIN')        navigate('/admin');
-      else if (role === 'DOCTOR')       navigate('/doctor');
-      else if (role === 'PATIENT')      navigate('/patient');
-      else if (role === 'SUPER_ADMIN')  navigate('/super-admin-dashboard');
-      else if (role === 'RECEPTIONIST') navigate('/receptionist');
-      else                              navigate(`/${role.toLowerCase()}`);
+      const role = data.role.toUpperCase().replace('-', '_');
+      if (role === 'DOCTOR') {
+        navigate('/doctor');
+      } else if (role === 'PATIENT') {
+        navigate('/patient');
+      } else if (role === 'RECEPTIONIST') {
+        navigate('/receptionist');
+      } else if (role === 'SUPER_ADMIN') {
+        navigate('/super-admin-dashboard');
+      } else {
+        navigate('/admin');
+      }
 
     } catch (err) {
       const msg = err.response?.data?.message || err.response?.data || 'Login failed. Please check your credentials.';
