@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import api from "../api/api";
-import LeaveManagement, { LeaveOperation } from "./DoctorLeavePage";
-import AppointmentManagement, { AppointmentOperation } from "./AppointmentPage";
-import PrescriptionsPage from "./PrescriptionsPage";
+import { Stethoscope, UserPlus, Search, Edit3, Trash2, ArrowLeft } from "lucide-react";
 import styles from "./DoctorPage.module.css";
 
 // DoctorContent component with React.memo
@@ -29,38 +28,11 @@ const DoctorContent = React.memo(({
   subDepartments,
   onDeptChange,
 }) => {
-  const leaveOperations = [];
-  if (operationMode === "createLeave") {
-    leaveOperations.push("Create Leave");
-  } else if (operationMode === "viewLeaveByDoctorId") {
-    leaveOperations.push("View Leave by Doctor ID");
-  }
-
-  // Map DoctorPage operationMode to AppointmentManagement operationMode
-  const appointmentOperationMap = {
-    appointmentViewById: "View Appointment by ID",
-    appointmentUpdate: "Update Appointment",
-    appointmentReschedule: "Reschedule Appointment",
-    appointmentCancel: "Cancel Appointment",
-    appointmentViewByDoctorDate: "View Appointments by Doctor and Date",
-    appointmentCountByDoctorDate: "Get Appointment Count by Doctor and Date",
-  };
-
-  const prescriptionOperationMap = {
-    prescriptionCreate: "Create Prescription",
-    prescriptionByPatient: "Prescriptions by Patient",
-    prescriptionMy: "List Prescriptions",
-  };
-
-  const currentAppointmentOperation = appointmentOperationMap[operationMode] || "View Appointment by ID";
-  const currentPrescriptionOperation = prescriptionOperationMap[operationMode];
-  const userRole = localStorage.getItem("role") || "patient";
-
   return (
     <div className={styles['right-panel']}>
       {loading && <p className={styles['loading-message']}>Loading...</p>}
 
-      {operationMode && operationMode !== "viewAll" && operationMode !== "createLeave" && operationMode !== "viewLeaveByDoctorId" && !Object.keys(appointmentOperationMap).includes(operationMode) && !Object.keys(prescriptionOperationMap).includes(operationMode) && (
+      {operationMode && operationMode !== "viewAll" && (
         <div className={styles['operation-content']}>
           <div className={styles.headerRow}>
             <div>
@@ -71,7 +43,13 @@ const DoctorContent = React.memo(({
                       operationMode === "update" ? "Update Doctor Profile" :
                         operationMode === "delete" ? "Delete Doctor Record" : "Doctor Profile Details"}
               </h2>
-              <div className={styles.headerSubtitle}>Manage physician profile, contact, experience, department, and sub-division assignment</div>
+              <div className={styles.headerSubtitle}>
+                {operationMode === "create" ? "Onboard a new medical doctor with specialization and department" :
+                  operationMode === "update" ? "Modify physician credentials, department, and contact information" :
+                    operationMode === "getById" ? "Lookup physician profile by unique Doctor Code or ID" :
+                      operationMode === "delete" ? "Remove physician profile from the active medical registry" :
+                        "Physician information and credentials"}
+              </div>
             </div>
           </div>
 
@@ -80,9 +58,21 @@ const DoctorContent = React.memo(({
               <div className={`${styles.inputRow} ${styles.alignEnd}`}>
                 <div className={styles.inputGroup}>
                   <label>Doctor Code / ID</label>
-                  <input type="text" placeholder="Enter Doctor Code / ID (e.g. DOC-101 or 101)" value={doctorId || ""} onChange={(e) => setDoctorId(e.target.value)} required disabled={loading} />
+                  <input 
+                    type="text" 
+                    placeholder="Enter Doctor Code / ID (e.g. DOC-101 or 101)" 
+                    value={doctorId || ""} 
+                    onChange={(e) => setDoctorId(e.target.value)} 
+                    required 
+                    disabled={loading} 
+                  />
                 </div>
-                <button type="button" className={`${styles.submitBtn} ${styles.btnNoMargin}`} onClick={operationMode === "getById" ? fetchDoctor : handleDeleteDoctor} disabled={loading}>
+                <button 
+                  type="button" 
+                  className={`${styles.submitBtn} ${styles.btnNoMargin}`} 
+                  onClick={operationMode === "getById" ? fetchDoctor : handleDeleteDoctor} 
+                  disabled={loading}
+                >
                   {loading ? (operationMode === "getById" ? "Fetching..." : "Deleting...") : (operationMode === "getById" ? "Fetch Doctor" : "Delete Doctor")}
                 </button>
               </div>
@@ -92,7 +82,14 @@ const DoctorContent = React.memo(({
               <div className={`${styles.inputRow} ${styles.alignEnd}`}>
                 <div className={styles.inputGroup}>
                   <label>Doctor Code / ID</label>
-                  <input type="text" placeholder="Enter Doctor Code / ID (e.g. DOC-101 or 101)" value={doctorId || ""} onChange={(e) => setDoctorId(e.target.value)} required disabled={loading} />
+                  <input 
+                    type="text" 
+                    placeholder="Enter Doctor Code / ID (e.g. DOC-101 or 101)" 
+                    value={doctorId || ""} 
+                    onChange={(e) => setDoctorId(e.target.value)} 
+                    required 
+                    disabled={loading} 
+                  />
                 </div>
                 <button type="button" className={`${styles.submitBtn} ${styles.btnNoMargin}`} onClick={fetchDoctor} disabled={loading}>
                   Fetch Doctor for Update
@@ -138,34 +135,25 @@ const DoctorContent = React.memo(({
             {(operationMode === "create" || operationMode === "update") && (
               <>
                 {createdDoctor ? (
-                  <>
-                    <div className={styles.inputRow}>
-                      <div className={styles.inputGroup}>
-                        <label>Doctor ID</label>
-                        <input type="text" value={createdDoctor.doctorId} disabled />
-                      </div>
-                      <div className={styles.inputGroup}>
-                        <label>Doctor Code</label>
-                        <input type="text" value={createdDoctor.doctorCode || "N/A"} disabled />
-                      </div>
+                  <div className={styles['created-doctor-card']}>
+                    <h3>Doctor Profile Saved</h3>
+                    <div className={styles.profileSummaryGrid}>
+                      <div><strong>Doctor ID:</strong> #{createdDoctor.doctorId}</div>
+                      <div><strong>Doctor Code:</strong> {createdDoctor.doctorCode || "N/A"}</div>
+                      <div><strong>Name:</strong> {createdDoctor.doctorName}</div>
+                      <div><strong>Specialization:</strong> {createdDoctor.specialization}</div>
+                      <div><strong>Contact:</strong> {createdDoctor.contact}</div>
+                      <div><strong>Experience:</strong> {createdDoctor.yoe} years</div>
                     </div>
-                    <div className={styles.inputRow}>
-                      <div className={styles.inputGroup}>
-                        <label>Doctor Full Name</label>
-                        <input type="text" value={createdDoctor.doctorName} disabled />
-                      </div>
-                      <div className={styles.inputGroup}>
-                        <label>Specialization</label>
-                        <input type="text" value={createdDoctor.specialization} disabled />
-                      </div>
-                    </div>
-                  </>
+                  </div>
                 ) : (
                   <>
                     {operationMode === "update" && (
-                      <div className={styles.inputGroup}>
-                        <label>Doctor ID</label>
-                        <input type="text" value={doctorId || ""} disabled />
+                      <div className={styles.inputRow}>
+                        <div className={styles.inputGroup}>
+                          <label>Doctor ID</label>
+                          <input type="text" value={doctorId || ""} disabled />
+                        </div>
                       </div>
                     )}
                     <div className={styles.inputRow}>
@@ -222,7 +210,7 @@ const DoctorContent = React.memo(({
                     <div className={styles.inputRow}>
                       <div className={styles.inputGroup}>
                         <label>Contact Number</label>
-                        <input type="text" name="contact" placeholder="10-digit Phone Number" value={formData.contact} onChange={handleInputChange} required pattern="\d{10}" disabled={loading} />
+                        <input type="text" name="contact" placeholder="10-digit Phone Number" value={formData.contact} onChange={handleInputChange} required pattern="\\d{10}" disabled={loading} />
                       </div>
                       <div className={styles.inputGroup}>
                         <label>Years of Experience</label>
@@ -240,13 +228,6 @@ const DoctorContent = React.memo(({
             )}
           </form>
         </div>
-      )}
-
-      {(operationMode === "createLeave" || operationMode === "viewLeaveByDoctorId") && (
-        <LeaveManagement
-          allowedOperations={leaveOperations}
-          doctorId={doctorId?.toString()}
-        />
       )}
 
       {operationMode === "viewAll" && viewAllMode && (
@@ -296,40 +277,9 @@ const DoctorContent = React.memo(({
               </div>
             </>
           ) : (
-            <p className={styles.emptyMessage}>No doctors available.</p>
+            <p className={styles.emptyMessage}>No doctors available in directory.</p>
           )}
         </div>
-      )}
-
-      {[
-        "appointmentViewById",
-        "appointmentUpdate",
-        "appointmentReschedule",
-        "appointmentCancel",
-        "appointmentViewByDoctorDate",
-        "appointmentCountByDoctorDate",
-      ].includes(operationMode) && (
-          <AppointmentManagement
-            allowedOperations={[
-              "View Appointment by ID",
-              "Update Appointment",
-              "Reschedule Appointment",
-              "Cancel Appointment",
-              "View Appointments by Doctor and Date",
-              "Get Appointment Count by Doctor and Date",
-            ]}
-            doctorId={doctorId?.toString() || ""}
-            operationMode={currentAppointmentOperation}
-            user={{ role: userRole, id: localStorage.getItem("id") }}
-          />
-        )}
-
-      {currentPrescriptionOperation && (
-        <PrescriptionsPage
-          allowedOperations={[currentPrescriptionOperation]}
-          initialOperation={currentPrescriptionOperation}
-          isEmbedded={true}
-        />
       )}
 
       {message && <p className={styles['status-message']}>{message}</p>}
@@ -337,9 +287,10 @@ const DoctorContent = React.memo(({
   );
 });
 
-// DoctorPage component
-const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewAll", "delete", "createLeave", "viewLeaveByDoctorId", "appointmentViewById", "appointmentUpdate", "appointmentReschedule", "appointmentCancel", "appointmentViewByDoctorDate", "appointmentCountByDoctorDate", "prescriptionCreate", "prescriptionByPatient", "prescriptionMy"], initialOperation, showHeaders = true }) => {
-  const [operationMode, setOperationMode] = useState(initialOperation || "");
+// DoctorPage component (Cleaned to contain ONLY Doctor operations)
+const DoctorPage = ({ initialOperation, showHeaders = false }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [operationMode, setOperationMode] = useState(initialOperation || searchParams.get("op") || null);
   const [doctorId, setDoctorId] = useState(null);
   const [formData, setFormData] = useState({
     doctorName: "",
@@ -351,30 +302,31 @@ const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewA
   });
   const [departments, setDepartments] = useState([]);
   const [subDepartments, setSubDepartments] = useState([]);
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
   const [createdDoctor, setCreatedDoctor] = useState(null);
   const [doctorFetched, setDoctorFetched] = useState(false);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // Pagination and View All Doctors State
   const [allDoctors, setAllDoctors] = useState([]);
-  const [viewAllMode, setViewAllMode] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize] = useState(15);
+  const [pageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
   const [sortBy] = useState("doctorId");
+  const [viewAllMode, setViewAllMode] = useState(true);
 
-  const userRole = localStorage.getItem("role") || "patient";
+  const userRole = localStorage.getItem("role") || "ADMIN";
   const isAdminRole = ["admin", "super-admin", "ADMIN", "SUPER_ADMIN"].includes(userRole);
 
-  useEffect(() => {
-    const fetchDeptList = async () => {
-      try {
-        const res = await api.get("/api/departments");
-        setDepartments(Array.isArray(res.data) ? res.data : []);
-      } catch (e) {
-        setDepartments([]);
+  const fetchDepartments = useCallback(async () => {
+    try {
+      const response = await api.get("/api/departments");
+      if (response.status === 200) {
+        setDepartments(response.data || []);
       }
-    };
-    fetchDeptList();
+    } catch (e) {
+      console.error("Failed to fetch departments", e);
+    }
   }, []);
 
   const handleDeptChange = useCallback(async (deptId) => {
@@ -383,41 +335,40 @@ const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewA
       return;
     }
     try {
-      const res = await api.get(`/admin/sub-departments/by-department/${deptId}`);
-      setSubDepartments(Array.isArray(res.data) ? res.data : []);
+      const response = await api.get(`/admin/sub-departments/department/${deptId}`);
+      if (response.status === 200) {
+        setSubDepartments(response.data || []);
+      }
     } catch (e) {
+      console.error("Failed to fetch sub-departments", e);
       setSubDepartments([]);
     }
   }, []);
 
-  const fetchAllDoctors = useCallback(async (page = currentPage) => {
-    if (!isAdminRole) {
-      setMessage("You do not have permission to view all doctors.");
-      return;
-    }
+  useEffect(() => {
+    fetchDepartments();
+  }, [fetchDepartments]);
+
+  const fetchAllDoctors = useCallback(async (page = 0) => {
     setLoading(true);
     try {
-      const response = await api.get("/doctors/", {
+      const endpoint = isAdminRole ? "/doctors/admin/all" : "/doctors/getAllDoctors";
+      const response = await api.get(endpoint, {
         params: { page, size: pageSize, sortBy },
-        timeout: 10000,
       });
       if (response.status === 200 && response.data) {
-        setAllDoctors(response.data.content || response.data);
-        setTotalPages(response.data.totalPages || Math.ceil(response.data.length / pageSize));
-        setCurrentPage(page);
+        const content = response.data.content || response.data;
+        setAllDoctors(Array.isArray(content) ? content : []);
+        setTotalPages(response.data.totalPages || 1);
+        setCurrentPage(response.data.number || page);
         setViewAllMode(true);
-        setMessage("All doctors fetched successfully");
-      } else {
-        setMessage("No doctors found");
-        setViewAllMode(false);
       }
     } catch (error) {
-      setMessage("Error fetching all doctors. Please try again.");
-      setViewAllMode(false);
+      setMessage("Error fetching all doctors.");
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize, sortBy, isAdminRole]);
+  }, [pageSize, sortBy, isAdminRole]);
 
   const handlePreviousPage = useCallback(() => {
     if (currentPage > 0) fetchAllDoctors(currentPage - 1);
@@ -433,23 +384,25 @@ const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewA
     setCreatedDoctor(null);
     setMessage("");
     setDoctorFetched(false);
-    if (operationMode !== "viewAll") {
-      setAllDoctors([]);
-      setViewAllMode(false);
-      setCurrentPage(0);
-    }
     setLoading(false);
-  }, [operationMode]);
+  }, []);
 
   const handleOperation = useCallback((mode) => {
     setMessage("");
     setOperationMode(mode);
-    resetForm();
-    setViewAllMode(mode === "viewAll");
-    if (mode === "viewAll") {
-      fetchAllDoctors(0);
+    if (mode) {
+      setSearchParams({ op: mode });
+    } else {
+      setSearchParams({});
     }
-  }, [resetForm, fetchAllDoctors]);
+    resetForm();
+    if (mode === "viewAll") {
+      setViewAllMode(true);
+      fetchAllDoctors(0);
+    } else {
+      setViewAllMode(false);
+    }
+  }, [resetForm, fetchAllDoctors, setSearchParams]);
 
   const fetchDoctor = useCallback(async () => {
     if (!doctorId) {
@@ -467,6 +420,7 @@ const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewA
           yoe: response.data.yoe,
           deptId: response.data.deptId || "",
           subDeptId: response.data.subDeptId || "",
+          departmentName: response.data.departmentName || "",
         });
         if (response.data.deptId) {
           handleDeptChange(response.data.deptId);
@@ -553,114 +507,126 @@ const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewA
   }, [operationMode]);
 
   useEffect(() => {
-    if (initialOperation) {
-      setOperationMode(initialOperation);
-      if (initialOperation === "viewAll") {
-        fetchAllDoctors(0);
-      } else {
-        setViewAllMode(false);
-      }
+    const op = initialOperation || null;
+    setOperationMode(op);
+    if (op === "viewAll") {
+      setViewAllMode(true);
+      fetchAllDoctors(0);
+    } else {
+      setViewAllMode(false);
     }
   }, [initialOperation, fetchAllDoctors]);
 
   return (
-    <div className={`${styles['doctor-container']} ${!showHeaders ? styles['admin-view'] : ''}`} style={{ flexGrow: 1 }}>
+    <div className={`${styles['doctor-container']} ${!showHeaders ? styles['admin-view'] : ''}`}>
       {showHeaders && (
         <>
           <h1>WELCOME TO THE HOSPITAL MANAGEMENT SYSTEM</h1>
-          <h2>DOCTOR DASHBOARD</h2>
+          <h2>DOCTOR ROSTER</h2>
         </>
       )}
-      {!initialOperation ? (
-        <div className={styles['split-container']}>
-          <div className={styles['left-panel']}>
-            <div className={styles['doctor-action-buttons']}>
-              <h3>Doctor Operations</h3>
-              {allowedOperations.includes("create") && ["admin", "super-admin", "ADMIN", "SUPER_ADMIN"].includes(userRole) && (
-                <button onClick={() => handleOperation("create")} disabled={loading}>
-                  Create New Doctor
-                </button>
-              )}
-              {allowedOperations.includes("getById") && (
-                <button onClick={() => handleOperation("getById")} disabled={loading}>
-                  Get Doctor by ID
-                </button>
-              )}
-              {allowedOperations.includes("update") && (
-                <button onClick={() => handleOperation("update")} disabled={loading}>
-                  Update Doctor
-                </button>
-              )}
-              {allowedOperations.includes("viewAll") && ["admin", "super-admin", "ADMIN", "SUPER_ADMIN"].includes(userRole) && (
-                <button onClick={() => handleOperation("viewAll")} disabled={loading}>
-                  View All Doctors
-                </button>
-              )}
-              {allowedOperations.includes("delete") && ["admin", "super-admin", "ADMIN", "SUPER_ADMIN"].includes(userRole) && (
-                <button onClick={() => handleOperation("delete")} disabled={loading}>
-                  Delete Doctor
-                </button>
-              )}
-              <h3>Leave Operations</h3>
-              {allowedOperations.includes("createLeave") && (
-                <button onClick={() => handleOperation("createLeave")} disabled={loading}>
-                  Create Leave
-                </button>
-              )}
-              {allowedOperations.includes("viewLeaveByDoctorId") && (
-                <button onClick={() => handleOperation("viewLeaveByDoctorId")} disabled={loading}>
-                  View Leave by Doctor ID
-                </button>
-              )}
-              <h3>Appointment Operations</h3>
-              {allowedOperations.includes("appointmentViewById") && (
-                <button onClick={() => handleOperation("appointmentViewById")} disabled={loading}>
-                  View Appointment by ID
-                </button>
-              )}
-              {allowedOperations.includes("appointmentUpdate") && (
-                <button onClick={() => handleOperation("appointmentUpdate")} disabled={loading}>
-                  Update Appointment
-                </button>
-              )}
-              {allowedOperations.includes("appointmentReschedule") && (
-                <button onClick={() => handleOperation("appointmentReschedule")} disabled={loading}>
-                  Reschedule Appointment
-                </button>
-              )}
-              {allowedOperations.includes("appointmentCancel") && (
-                <button onClick={() => handleOperation("appointmentCancel")} disabled={loading}>
-                  Cancel Appointment
-                </button>
-              )}
-              {allowedOperations.includes("appointmentViewByDoctorDate") && (
-                <button onClick={() => handleOperation("appointmentViewByDoctorDate")} disabled={loading}>
-                  View Appointments by Doctor and Date
-                </button>
-              )}
-              {allowedOperations.includes("appointmentCountByDoctorDate") && (
-                <button onClick={() => handleOperation("appointmentCountByDoctorDate")} disabled={loading}>
-                  Get Appointment Count by Doctor and Date
-                </button>
-              )}
-              <h3>Prescription Operations</h3>
-              {allowedOperations.includes("prescriptionCreate") && (
-                <button onClick={() => handleOperation("prescriptionCreate")} disabled={loading}>
-                  Create Prescription
-                </button>
-              )}
-              {allowedOperations.includes("prescriptionByPatient") && (
-                <button onClick={() => handleOperation("prescriptionByPatient")} disabled={loading}>
-                  Prescriptions by Patient
-                </button>
-              )}
-              {allowedOperations.includes("prescriptionMy") && (
-                <button onClick={() => handleOperation("prescriptionMy")} disabled={loading}>
-                  List Prescriptions
-                </button>
-              )}
-            </div>
+
+      {/* HUB VIEW: Doctor-Only Operations Cards when no operation is selected */}
+      {!operationMode && (
+        <div className={styles.hubWrapper}>
+          <div className={styles.hubHeader}>
+            <h2 className={styles.hubTitle}>Doctor Roster Management</h2>
+            <p className={styles.hubSubtitle}>
+              Select an operation below to open its dedicated page
+            </p>
           </div>
+
+          <div className={styles.operationCardsGrid}>
+            <div 
+              className={styles.opCard}
+              onClick={() => handleOperation('viewAll')}
+            >
+              <div className={styles.opCardIcon}>
+                <Stethoscope size={22} />
+              </div>
+              <div className={styles.opCardInfo}>
+                <h4>Physician Directory</h4>
+                <p>View all active doctors and department assignments</p>
+              </div>
+              <span className={styles.opCardBadge}>{allDoctors.length > 0 ? `${allDoctors.length} Doctors` : 'Directory'}</span>
+            </div>
+
+            {isAdminRole && (
+              <div 
+                className={styles.opCard}
+                onClick={() => handleOperation('create')}
+              >
+                <div className={styles.opCardIcon}>
+                  <UserPlus size={22} />
+                </div>
+                <div className={styles.opCardInfo}>
+                  <h4>Onboard Physician</h4>
+                  <p>Register new physician credentials and specialization</p>
+                </div>
+                <span className={`${styles.opCardBadge} ${styles.badgeGreen}`}>+ Onboard</span>
+              </div>
+            )}
+
+            <div 
+              className={styles.opCard}
+              onClick={() => handleOperation('getById')}
+            >
+              <div className={styles.opCardIcon}>
+                <Search size={22} />
+              </div>
+              <div className={styles.opCardInfo}>
+                <h4>Search Doctor ID</h4>
+                <p>Lookup physician profile by Doctor ID or code</p>
+              </div>
+              <span className={`${styles.opCardBadge} ${styles.badgeBlue}`}>ID Lookup</span>
+            </div>
+
+            <div 
+              className={styles.opCard}
+              onClick={() => handleOperation('update')}
+            >
+              <div className={styles.opCardIcon}>
+                <Edit3 size={22} />
+              </div>
+              <div className={styles.opCardInfo}>
+                <h4>Update Profile</h4>
+                <p>Update specialization, department, and contact info</p>
+              </div>
+              <span className={`${styles.opCardBadge} ${styles.badgeOrange}`}>Edit Profile</span>
+            </div>
+
+            {isAdminRole && (
+              <div 
+                className={styles.opCard}
+                onClick={() => handleOperation('delete')}
+              >
+                <div className={styles.opCardIcon}>
+                  <Trash2 size={22} />
+                </div>
+                <div className={styles.opCardInfo}>
+                  <h4>Delete Doctor</h4>
+                  <p>Remove physician record from the system</p>
+                </div>
+                <span className={`${styles.opCardBadge} ${styles.badgeRed}`}>Delete</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {operationMode && (
+        <div className={styles.dedicatedView}>
+          <div className={styles.backBar}>
+            <button
+              type="button"
+              onClick={() => handleOperation(null)}
+              className={styles.backButton}
+            >
+              <ArrowLeft size={16} className={styles.backIcon} />
+              <span>Back to Doctor Roster</span>
+            </button>
+          </div>
+
           <DoctorContent
             operationMode={operationMode}
             doctorId={doctorId}
@@ -685,30 +651,6 @@ const DoctorPage = ({ allowedOperations = ["create", "getById", "update", "viewA
             onDeptChange={handleDeptChange}
           />
         </div>
-      ) : (
-        <DoctorContent
-          operationMode={operationMode}
-          doctorId={doctorId}
-          formData={formData}
-          createdDoctor={createdDoctor}
-          doctorFetched={doctorFetched}
-          allDoctors={allDoctors}
-          viewAllMode={viewAllMode}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          loading={loading}
-          message={message}
-          handleSubmit={handleSubmit}
-          handleInputChange={handleInputChange}
-          fetchDoctor={fetchDoctor}
-          handleDeleteDoctor={handleDeleteDoctor}
-          handlePreviousPage={handlePreviousPage}
-          handleNextPage={handleNextPage}
-          setDoctorId={setDoctorIdCallback}
-          departments={departments}
-          subDepartments={subDepartments}
-          onDeptChange={handleDeptChange}
-        />
       )}
     </div>
   );

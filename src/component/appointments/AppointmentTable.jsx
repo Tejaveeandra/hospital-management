@@ -42,6 +42,14 @@ const AppointmentTable = ({ appointments, user, getAppointmentCharge, onPay, pre
                   prescribedAppointmentCodes.has(appointment.appointmentId)
                 ))
               ));
+
+            const isPaid = Boolean(
+              appointment.isPaid === true ||
+              appointment.paid === true ||
+              (appointment.status && String(appointment.status).trim().toUpperCase() === 'PAID') ||
+              (appointment.paymentStatus && String(appointment.paymentStatus).trim().toUpperCase() === 'PAID')
+            );
+
             return (
               <tr key={appointment.appointmentId || appointment.appointmentCode}>
                 <td>{appointment.appointmentCode || `#${appointment.appointmentId}`}</td>
@@ -60,7 +68,7 @@ const AppointmentTable = ({ appointments, user, getAppointmentCharge, onPay, pre
                 <td>{appointment.isPreferredDoctor ? "Yes" : "No"}</td>
                 <td>{getAppointmentCharge(appointment)}</td>
                 <td>
-                  {appointment.isPaid ? (
+                  {isPaid ? (
                     <span className={styles['status-paid']}>Paid</span>
                   ) : (
                     <span className={styles['status-unpaid']}>Unpaid</span>
@@ -75,7 +83,7 @@ const AppointmentTable = ({ appointments, user, getAppointmentCharge, onPay, pre
                 </td>
                 {(user?.role === 'patient' || user?.role === 'admin') && (
                   <td>
-                    {!appointment.isPaid && (
+                    {!isPaid && (
                       <button
                         onClick={() => onPay(appointment.appointmentId, getAppointmentCharge(appointment))}
                         className={styles['pay-button-table']}

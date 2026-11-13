@@ -13,7 +13,6 @@ import MedicineStorePage from '../pages/MedicineStorePage';
 import HospitalChargesPage from '../pages/HospitalChargesPage';
 import InsuranceClaimsPage from '../pages/InsuranceClaimsPage';
 import AdvancedPatientSearchPage from '../pages/AdvancedPatientSearchPage';
-import MasterOperationsPage from '../pages/MasterOperationsPage';
 import HRManagementPage from '../pages/HRManagementPage';
 import StaffManagementPage from '../pages/StaffManagementPage';
 import CandidateRecruitmentPage from '../pages/CandidateRecruitmentPage';
@@ -57,7 +56,7 @@ const AdminRouteWrapper = () => {
       <Route path="audit-logs" element={<AuditLogsPage />} />
       <Route path="beds" element={<BedManagementPage isEmbedded={true} initialOperation={op} key={`beds-${op}`} />} />
       <Route path="facilities" element={<FacilityManagementPage isEmbedded={true} initialOperation={op} key={`fac-${op}`} />} />
-      <Route path="master-console" element={<MasterOperationsPage />} />
+      <Route path="master-console" element={<Navigate to="/admin/roles" replace />} />
       <Route path="roles" element={<RoleManagementPage />} />
       <Route path="hr" element={<HRManagementPage initialOperation={op} />} />
       <Route path="*" element={<Navigate to="dashboard" replace />} />

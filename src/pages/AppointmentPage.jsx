@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import api from "../api/api";
 import styles from "./AppointmentPage.module.css";
@@ -18,12 +19,13 @@ import {
   CheckCircle2, 
   ShieldAlert, 
   RefreshCw,
-  Edit3
+  Edit3,
+  ArrowLeft
 } from "lucide-react";
 
 const DEFAULT_OPERATIONS = [
-  "Create Appointment",
   "View All Appointments",
+  "Create Appointment",
   "View Appointment by ID",
   "Reschedule Appointment",
   "Cancel Appointment"
@@ -33,9 +35,11 @@ const AppointmentManagement = ({
   allowedOperations = DEFAULT_OPERATIONS, 
   doctorId, 
   operationMode, 
+  initialOperation,
   user: propUser, 
   isEmbedded = false 
 }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const ops = Array.isArray(allowedOperations) && allowedOperations.length > 0 ? allowedOperations : DEFAULT_OPERATIONS;
 
   const [formData, setFormData] = useState({
@@ -100,13 +104,25 @@ const AppointmentManagement = ({
 
   // Determine active tab
   const getInitialMode = () => {
-    if (operationMode === "Update Appointment" || operationMode === "reschedule") return "Reschedule Appointment";
-    if (operationMode === "cancel") return "Cancel Appointment";
-    if (operationMode && ops.includes(operationMode)) return operationMode;
-    return ops[0] || "Create Appointment";
+    const activeOp = operationMode || initialOperation || searchParams.get("op");
+    if (activeOp === "Update Appointment" || activeOp === "reschedule") return "Reschedule Appointment";
+    if (activeOp === "cancel") return "Cancel Appointment";
+    if (activeOp && ops.includes(activeOp)) return activeOp;
+    if (ops.length === 1) return ops[0];
+    return null;
   };
 
   const [internalOperationMode, setInternalOperationMode] = useState(getInitialMode());
+
+  const handleSelectOperation = (mode) => {
+    setInternalOperationMode(mode);
+    setMessage("");
+    if (mode) {
+      setSearchParams({ op: mode });
+    } else {
+      setSearchParams({});
+    }
+  };
 
   const showNotification = (msg, type = "info") => {
     setMessage(msg);
@@ -114,16 +130,21 @@ const AppointmentManagement = ({
   };
 
   useEffect(() => {
-    if (operationMode) {
-      if (operationMode === "Update Appointment" || operationMode === "reschedule") {
+    const activeOp = operationMode || initialOperation;
+    if (activeOp) {
+      if (activeOp === "Update Appointment" || activeOp === "reschedule") {
         setInternalOperationMode("Reschedule Appointment");
-      } else if (operationMode === "cancel") {
+      } else if (activeOp === "cancel") {
         setInternalOperationMode("Cancel Appointment");
-      } else if (ops.includes(operationMode)) {
-        setInternalOperationMode(operationMode);
+      } else if (ops.includes(activeOp)) {
+        setInternalOperationMode(activeOp);
       }
+    } else if (ops.length === 1) {
+      setInternalOperationMode(ops[0]);
+    } else {
+      setInternalOperationMode(null);
     }
-  }, [operationMode, ops]);
+  }, [operationMode, initialOperation]);
 
   // Load branches
   useEffect(() => {
@@ -195,7 +216,7 @@ const AppointmentManagement = ({
         }
         setSubDepartments(subList);
         if (subList.length > 0) {
-          setFormData(prev => ({ ...prev, subDeptId: String(subList[0].subDeptId) }));
+          setFormData(prev => ({ ...prev, subDeptId: String(subList[0].subDeptId || subList[0].id) }));
         } else {
           setFormData(prev => ({ ...prev, subDeptId: "" }));
         }
@@ -540,54 +561,112 @@ const AppointmentManagement = ({
         </div>
       )}
 
-      {/* Tabs */}
-      <div className={styles['operation-tabs']}>
-        {ops.includes("Create Appointment") && (
+      {/* HUB VIEW: Appointments Operations Hub Cards when no operation is selected */}
+      {!internalOperationMode && (
+        <div className={styles.hubWrapper}>
+          <div className={styles.hubHeader}>
+            <h2 className={styles.hubTitle}>Master Appointments Management</h2>
+            <p className={styles.hubSubtitle}>
+              Select an operation below to open its dedicated page
+            </p>
+          </div>
+
+          <div className={styles.operationCardsGrid}>
+            {ops.includes("View All Appointments") && (
+              <div 
+                className={styles.opCard}
+                onClick={() => handleSelectOperation("View All Appointments")}
+              >
+                <div className={styles.opCardIcon}>
+                  <ListFilter size={22} />
+                </div>
+                <div className={styles.opCardInfo}>
+                  <h4>Appointments Registry</h4>
+                  <p>Browse, filter, and track all hospital consultations</p>
+                </div>
+                <span className={styles.opCardBadge}>All Appts</span>
+              </div>
+            )}
+
+            {ops.includes("Create Appointment") && (
+              <div 
+                className={styles.opCard}
+                onClick={() => handleSelectOperation("Create Appointment")}
+              >
+                <div className={styles.opCardIcon}>
+                  <CalendarPlus size={22} />
+                </div>
+                <div className={styles.opCardInfo}>
+                  <h4>Book Consultation</h4>
+                  <p>Schedule a new OPD consultation with a specialist</p>
+                </div>
+                <span className={`${styles.opCardBadge} ${styles.badgeGreen}`}>+ Book</span>
+              </div>
+            )}
+
+            {ops.includes("View Appointment by ID") && (
+              <div 
+                className={styles.opCard}
+                onClick={() => handleSelectOperation("View Appointment by ID")}
+              >
+                <div className={styles.opCardIcon}>
+                  <Search size={22} />
+                </div>
+                <div className={styles.opCardInfo}>
+                  <h4>Lookup by Code / ID</h4>
+                  <p>Retrieve appointment details, token, and status</p>
+                </div>
+                <span className={`${styles.opCardBadge} ${styles.badgeBlue}`}>Lookup</span>
+              </div>
+            )}
+
+            {ops.includes("Reschedule Appointment") && (
+              <div 
+                className={styles.opCard}
+                onClick={() => handleSelectOperation("Reschedule Appointment")}
+              >
+                <div className={styles.opCardIcon}>
+                  <Clock size={22} />
+                </div>
+                <div className={styles.opCardInfo}>
+                  <h4>Reschedule Booking</h4>
+                  <p>Modify consultation date or preferred time slot</p>
+                </div>
+                <span className={`${styles.opCardBadge} ${styles.badgeOrange}`}>Reschedule</span>
+              </div>
+            )}
+
+            {ops.includes("Cancel Appointment") && (
+              <div 
+                className={styles.opCard}
+                onClick={() => handleSelectOperation("Cancel Appointment")}
+              >
+                <div className={styles.opCardIcon}>
+                  <XCircle size={22} />
+                </div>
+                <div className={styles.opCardInfo}>
+                  <h4>Cancel Booking</h4>
+                  <p>Cancel scheduled consultation with recorded reason</p>
+                </div>
+                <span className={`${styles.opCardBadge} ${styles.badgeRed}`}>Cancel</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {internalOperationMode && ops.length > 1 && (
+        <div className={styles.backBar}>
           <button
             type="button"
-            className={`${styles['tab-btn']} ${internalOperationMode === "Create Appointment" ? styles['active-tab'] : ''}`}
-            onClick={() => { setInternalOperationMode("Create Appointment"); setMessage(""); }}
+            onClick={() => handleSelectOperation(null)}
+            className={styles.backButton}
           >
-            <CalendarPlus size={16} /> Book Appointment
+            <ArrowLeft size={16} className={styles.backIcon} />
+            <span>Back to Master Appointments</span>
           </button>
-        )}
-        {ops.includes("View All Appointments") && (
-          <button
-            type="button"
-            className={`${styles['tab-btn']} ${internalOperationMode === "View All Appointments" ? styles['active-tab'] : ''}`}
-            onClick={() => { setInternalOperationMode("View All Appointments"); setMessage(""); }}
-          >
-            <ListFilter size={16} /> All Appointments
-          </button>
-        )}
-        {ops.includes("View Appointment by ID") && (
-          <button
-            type="button"
-            className={`${styles['tab-btn']} ${internalOperationMode === "View Appointment by ID" ? styles['active-tab'] : ''}`}
-            onClick={() => { setInternalOperationMode("View Appointment by ID"); setMessage(""); }}
-          >
-            <Search size={16} /> Search by ID
-          </button>
-        )}
-        {ops.includes("Reschedule Appointment") && (
-          <button
-            type="button"
-            className={`${styles['tab-btn']} ${internalOperationMode === "Reschedule Appointment" ? styles['active-tab'] : ''}`}
-            onClick={() => { setInternalOperationMode("Reschedule Appointment"); setMessage(""); }}
-          >
-            <Clock size={16} /> Reschedule
-          </button>
-        )}
-        {ops.includes("Cancel Appointment") && (
-          <button
-            type="button"
-            className={`${styles['tab-btn']} ${internalOperationMode === "Cancel Appointment" ? styles['active-tab'] : ''}`}
-            onClick={() => { setInternalOperationMode("Cancel Appointment"); setMessage(""); }}
-          >
-            <XCircle size={16} /> Cancel
-          </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* TAB 1: CREATE APPOINTMENT */}
       {internalOperationMode === "Create Appointment" && (
@@ -675,8 +754,8 @@ const AppointmentManagement = ({
                 >
                   <option value="">-- General Division / Sub-Department --</option>
                   {subDepartments.map(sd => (
-                    <option key={sd.subDeptId} value={sd.subDeptId}>
-                      {sd.subDeptName}
+                    <option key={sd.subDeptId || sd.id} value={sd.subDeptId || sd.id}>
+                      {sd.subDeptName || sd.name}
                     </option>
                   ))}
                 </select>
@@ -1122,10 +1201,19 @@ const AppointmentManagement = ({
           onSuccess={() => {
             setShowPaymentModal(false);
             if (createdAppointment) {
-              setCreatedAppointment((prev) => ({ ...prev, isPaid: true }));
+              setCreatedAppointment((prev) => ({ ...prev, isPaid: true, status: 'Paid' }));
             }
+            setAppointments((prev) =>
+              prev.map((app) =>
+                (selectedAppointment && app.appointmentId === selectedAppointment.appointmentId)
+                  ? { ...app, isPaid: true, status: 'Paid' }
+                  : app
+              )
+            );
             if (internalOperationMode === "View All Appointments") {
               fetchAllAppointments(currentPage);
+            } else if (internalOperationMode === "View Appointment by ID" && typeof fetchAppointmentById === 'function') {
+              fetchAppointmentById();
             }
           }}
         />

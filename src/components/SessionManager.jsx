@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { refreshUserToken, logoutUser } from '../api/api';
 
-const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000; // 15 Minutes
+// Inactivity timeout disabled upon user request
+const INACTIVITY_TIMEOUT_MS = 30 * 24 * 60 * 60 * 1000; // 30 Days
 const REFRESH_INTERVAL_MS = 14 * 60 * 1000;    // 14 Minutes
 
 const SessionManager = () => {
@@ -34,12 +35,13 @@ const SessionManager = () => {
       }
 
       const idleTime = Date.now() - lastActivityRef.current;
-      if (idleTime >= INACTIVITY_TIMEOUT_MS) {
+      // Auto-lock temporarily stopped upon user request
+      /* if (idleTime >= INACTIVITY_TIMEOUT_MS) {
         console.warn('[SESSION] Inactivity timeout reached (15 minutes). Auto-logging out and revoking token...');
         clearInterval(interval);
         await logoutUser(false);
         navigate('/?reason=inactivity', { replace: true });
-      }
+      } */
     }, 15000);
 
     return () => clearInterval(interval);

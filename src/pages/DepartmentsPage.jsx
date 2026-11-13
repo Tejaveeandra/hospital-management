@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import api from "../api/api";
 import styles from "./DepartmentsPage.module.css";
-import { Building2, MapPin, Phone, Mail, CheckCircle, PlusCircle, ListFilter } from "lucide-react";
+import { Building2, MapPin, Phone, Mail, CheckCircle, PlusCircle, ListFilter, ArrowLeft } from "lucide-react";
 
 const DepartmentsPage = ({ allowedOperations = [], initialOperation, isEmbedded = false }) => {
-  const [operationMode, setOperationMode] = useState(initialOperation || "List Departments");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [operationMode, setOperationMode] = useState(initialOperation || searchParams.get("op") || null);
   const [departments, setDepartments] = useState([]);
   const [subDepartments, setSubDepartments] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -34,10 +36,25 @@ const DepartmentsPage = ({ allowedOperations = [], initialOperation, isEmbedded 
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const handleSelectOperation = (mode) => {
+    setOperationMode(mode);
+    if (mode) {
+      setSearchParams({ op: mode });
+    } else {
+      setSearchParams({});
+    }
+  };
+
   useEffect(() => {
     if (initialOperation) setOperationMode(initialOperation);
     else if (allowedOperations?.length > 0) setOperationMode(allowedOperations[0]);
+    else setOperationMode(null);
   }, [initialOperation, allowedOperations]);
+
+  useEffect(() => {
+    fetchDepartments();
+    fetchBranches();
+  }, []);
 
   useEffect(() => {
     setMessage("");
@@ -190,6 +207,104 @@ const DepartmentsPage = ({ allowedOperations = [], initialOperation, isEmbedded 
     <div className={`${styles.container} ${isEmbedded ? styles.embedded : ''}`}>
       {loading && <div className={styles.loadingBanner}>Loading...</div>}
       {message && <div className={styles.messageBanner}>{message}</div>}
+
+      {/* HUB VIEW: Departments & Branches Operation Hub Cards when no operation is selected */}
+      {!operationMode && (
+        <div className={styles.hubWrapper}>
+          <div className={styles.hubHeader}>
+            <h2 className={styles.hubTitle}>Departments & Branches Management</h2>
+            <p className={styles.hubSubtitle}>
+              Select an operation below to open its dedicated page
+            </p>
+          </div>
+
+          <div className={styles.operationCardsGrid}>
+            <div 
+              className={styles.opCard}
+              onClick={() => handleSelectOperation('List Departments')}
+            >
+              <div className={styles.opCardIcon}>
+                <Building2 size={22} />
+              </div>
+              <div className={styles.opCardInfo}>
+                <h4>All Departments</h4>
+                <p>Browse hospital departments & divisions</p>
+              </div>
+              <span className={styles.opCardBadge}>{departments.length} Units</span>
+            </div>
+
+            <div 
+              className={styles.opCard}
+              onClick={() => handleSelectOperation('Add Department')}
+            >
+              <div className={styles.opCardIcon}>
+                <PlusCircle size={22} />
+              </div>
+              <div className={styles.opCardInfo}>
+                <h4>Add Department</h4>
+                <p>Register new clinical or operational department</p>
+              </div>
+              <span className={`${styles.opCardBadge} ${styles.badgeGreen}`}>+ Add Dept</span>
+            </div>
+
+            <div 
+              className={styles.opCard}
+              onClick={() => handleSelectOperation('List Branches')}
+            >
+              <div className={styles.opCardIcon}>
+                <MapPin size={22} />
+              </div>
+              <div className={styles.opCardInfo}>
+                <h4>Hospital Branches</h4>
+                <p>Manage hospital locations and branches</p>
+              </div>
+              <span className={`${styles.opCardBadge} ${styles.badgeBlue}`}>{branches.length} Branches</span>
+            </div>
+
+            <div 
+              className={styles.opCard}
+              onClick={() => handleSelectOperation('Add Branch')}
+            >
+              <div className={styles.opCardIcon}>
+                <PlusCircle size={22} />
+              </div>
+              <div className={styles.opCardInfo}>
+                <h4>Add Branch</h4>
+                <p>Onboard a new hospital branch location</p>
+              </div>
+              <span className={`${styles.opCardBadge} ${styles.badgeGreen}`}>+ Add Branch</span>
+            </div>
+
+            <div 
+              className={styles.opCard}
+              onClick={() => handleSelectOperation('Sub-Departments')}
+            >
+              <div className={styles.opCardIcon}>
+                <ListFilter size={22} />
+              </div>
+              <div className={styles.opCardInfo}>
+                <h4>Sub-Departments</h4>
+                <p>Manage specialized units within departments</p>
+              </div>
+              <span className={`${styles.opCardBadge} ${styles.badgePurple}`}>Sub-Units</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {operationMode && (
+        <div className={styles.backBar}>
+          <button
+            type="button"
+            onClick={() => handleSelectOperation(null)}
+            className={styles.backButton}
+          >
+            <ArrowLeft size={16} className={styles.backIcon} />
+            <span>Back to Departments & Branches</span>
+          </button>
+        </div>
+      )}
+
 
       {showListDepts && (
         <div className={styles.card}>
@@ -461,13 +576,13 @@ const DepartmentsPage = ({ allowedOperations = [], initialOperation, isEmbedded 
               </thead>
               <tbody>
                 {subDepartments.map((sd) => (
-                  <tr key={sd.subDeptId}>
-                    <td>#{sd.subDeptId}</td>
-                    <td><strong>{sd.subDeptName}</strong></td>
+                  <tr key={sd.subDeptId || sd.id}>
+                    <td>#{sd.subDeptId || sd.id}</td>
+                    <td><strong>{sd.subDeptName || sd.name}</strong></td>
                     <td>Dept #{sd.deptId}</td>
                     <td>
                       <button 
-                        onClick={() => handleDeleteSubDept(sd.subDeptId)} 
+                        onClick={() => handleDeleteSubDept(sd.subDeptId || sd.id)} 
                         className={styles.dangerBtn}
                         disabled={loading}
                       >

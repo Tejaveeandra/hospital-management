@@ -1,17 +1,21 @@
+
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import api from "../api/api";
-import { UserPlus, Search, Edit3, Eye, FileText, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
+import { UserPlus, Search, Edit3, Eye, FileText, CheckCircle2, AlertCircle, RefreshCw, ArrowLeft } from "lucide-react";
 import styles from "./PatientPage.module.css";
 import AppointmentManagement from "./AppointmentPage";
 
 const PatientPage = ({ initialOperation, isEmbedded = false }) => {
-  const [operationMode, setOperationMode] = useState(initialOperation || "viewAll");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [operationMode, setOperationMode] = useState(initialOperation || searchParams.get("op") || null);
   const [searchUhid, setSearchUhid] = useState("");
   const [formData, setFormData] = useState({
     patientId: "",
     uhid: "",
     patientName: "",
     username: "",
+    email: "",
     contact: "",
     age: "",
     gender: "",
@@ -49,6 +53,7 @@ const PatientPage = ({ initialOperation, isEmbedded = false }) => {
       uhid: "",
       patientName: "",
       username: "",
+      email: "",
       contact: "",
       age: "",
       gender: "",
@@ -107,7 +112,7 @@ const PatientPage = ({ initialOperation, isEmbedded = false }) => {
         });
         setPatientFetched(true);
         showNotification(`Patient ${p.uhid || p.patientName} record loaded successfully`, "success");
-        
+
         // Fetch prescriptions for this patient
         const lookupId = p.patientId || term;
         try {
@@ -167,12 +172,17 @@ const PatientPage = ({ initialOperation, isEmbedded = false }) => {
         });
         setPatientFetched(true);
       } else if (operationMode === "create") {
+        const cleanName = formData.patientName
+          ? formData.patientName.trim().toLowerCase().replace(/[^a-z0-9]/g, "")
+          : "patient";
+        const cleanContact = formData.contact
+          ? formData.contact.trim().replace(/[^0-9]/g, "")
+          : "";
         const autoUsername = formData.username && formData.username.trim()
           ? formData.username.trim()
-          : (formData.patientName
-              ? formData.patientName.toLowerCase().replace(/[^a-z0-9]/g, "") + Math.floor(1000 + Math.random() * 9000)
-              : "patient_" + Date.now());
+          : `${cleanName}${cleanContact}${formData.age || ""}`;
 
+        // 1. Create Patient Medical Record in patients table first (validates medical fields & resolves collision-free username)
         const payload = {
           patientName: formData.patientName.trim(),
           username: autoUsername,
@@ -186,7 +196,25 @@ const PatientPage = ({ initialOperation, isEmbedded = false }) => {
 
         const response = await api.post("/patients/addPatient", payload);
         const assignedUhid = response.data.uhid || `ID #${response.data.patientId}`;
-        showNotification(`Patient created successfully with UHID: ${assignedUhid}`, "success");
+        const finalUsername = response.data.username || autoUsername;
+
+        // 2. Create Patient Portal Login in users table with the exact resolved username if email is provided
+        if (formData.email && formData.email.trim()) {
+          try {
+            await api.post("/users/register", {
+              username: finalUsername,
+              email: formData.email.trim(),
+              role: "PATIENT"
+            });
+          } catch (userErr) {
+            console.warn("Patient record created, but portal user registration returned:", userErr);
+          }
+        }
+
+        showNotification(
+          `Patient created with UHID: ${assignedUhid} & synced Username: ${finalUsername}`,
+          "success"
+        );
         setCreatedPatient(response.data);
         setSearchUhid(response.data.uhid || response.data.patientId);
       }
@@ -200,6 +228,7 @@ const PatientPage = ({ initialOperation, isEmbedded = false }) => {
 
   const handleEditFromTable = (patient) => {
     setOperationMode("update");
+    setSearchParams({ op: "update" });
     const targetUhid = patient.uhid || String(patient.patientId);
     setSearchUhid(targetUhid);
     setFormData({
@@ -220,6 +249,7 @@ const PatientPage = ({ initialOperation, isEmbedded = false }) => {
 
   const handleViewFromTable = (patient) => {
     setOperationMode("view");
+    setSearchParams({ op: "view" });
     const targetUhid = patient.uhid || String(patient.patientId);
     setSearchUhid(targetUhid);
     fetchPatientByUhid(targetUhid);
@@ -286,7 +316,90 @@ const PatientPage = ({ initialOperation, isEmbedded = false }) => {
         </div>
       )}
 
+
+      {/* HUB VIEW: Show Patient Operations Cards ONLY when no operation is selected */}
+      {!operationMode && (
+        <div className={styles.hubWrapper}>
+          <div className={styles.hubHeader}>
+            <h2 className={styles.hubTitle}>Patient Records Management</h2>
+            <p className={styles.hubSubtitle}>
+              Select an operation below to open its dedicated page
+            </p>
+          </div>
+
+          <div className={styles.operationCardsGrid}>
+            <div
+              className={styles.opCard}
+              onClick={() => handleOperation('viewAll')}
+            >
+              <div className={styles.opCardIcon}>
+                <FileText size={22} />
+              </div>
+              <div className={styles.opCardInfo}>
+                <h4>Patient Directory</h4>
+                <p>Browse all registered hospital patient files</p>
+              </div>
+              <span className={styles.opCardBadge}>{allPatients.length > 0 ? `${allPatients.length} Loaded` : 'Directory'}</span>
+            </div>
+
+            <div
+              className={styles.opCard}
+              onClick={() => handleOperation('create')}
+            >
+              <div className={styles.opCardIcon}>
+                <UserPlus size={22} />
+              </div>
+              <div className={styles.opCardInfo}>
+                <h4>Register Patient</h4>
+                <p>Create medical record & issue unique UHID</p>
+              </div>
+              <span className={`${styles.opCardBadge} ${styles.badgeGreen}`}>+ New Patient</span>
+            </div>
+
+            <div
+              className={styles.opCard}
+              onClick={() => handleOperation('view')}
+            >
+              <div className={styles.opCardIcon}>
+                <Eye size={22} />
+              </div>
+              <div className={styles.opCardInfo}>
+                <h4>Search by UHID</h4>
+                <p>Lookup medical records and prescriptions</p>
+              </div>
+              <span className={`${styles.opCardBadge} ${styles.badgeBlue}`}>UHID Lookup</span>
+            </div>
+
+            <div
+              className={styles.opCard}
+              onClick={() => handleOperation('update')}
+            >
+              <div className={styles.opCardIcon}>
+                <Edit3 size={22} />
+              </div>
+              <div className={styles.opCardInfo}>
+                <h4>Update Record</h4>
+                <p>Modify contact info, diagnosis, and notes</p>
+              </div>
+              <span className={`${styles.opCardBadge} ${styles.badgeOrange}`}>Edit Record</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {operationMode && (
       <div className={styles['right-panel']}>
+        <div className={styles.backBar}>
+          <button
+            type="button"
+            onClick={() => handleOperation(null)}
+            className={styles.backButton}
+          >
+            <ArrowLeft size={16} className={styles.backIcon} />
+            <span>Back to Patient Records</span>
+          </button>
+        </div>
+
         {message && (
           <div
             className={styles['message']}
@@ -324,6 +437,31 @@ const PatientPage = ({ initialOperation, isEmbedded = false }) => {
                 <div className={styles.inputGroup}>
                   <label>Contact Phone (10 Digits) *</label>
                   <input name="contact" placeholder="9876543210" value={formData.contact} onChange={handleInputChange} required />
+                </div>
+              </div>
+
+              <div className={styles.inputRow}>
+                <div className={styles.inputGroup}>
+                  <label>Patient Login Username * (Synced to Users & Patients Table)</label>
+                  <input
+                    name="username"
+                    placeholder="e.g. john.doe9876"
+                    value={formData.username}
+                    onChange={handleInputChange}
+                    minLength={3}
+                    required
+                  />
+                </div>
+                <div className={styles.inputGroup}>
+                  <label>Patient Email * (Creates Patient Portal Account)</label>
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="patient@example.com"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                  />
                 </div>
               </div>
 
@@ -774,6 +912,7 @@ const PatientPage = ({ initialOperation, isEmbedded = false }) => {
           />
         )}
       </div>
+      )}
     </div>
   );
 };

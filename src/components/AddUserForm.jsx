@@ -71,6 +71,7 @@ const roleMeta = {
 
 const AddUserForm = ({ onClose, onUserAdded }) => {
   const [formData, setFormData] = useState({
+    selectedProfileId: "",
     firstName: "",
     lastName: "",
     username: "",
@@ -80,22 +81,46 @@ const AddUserForm = ({ onClose, onUserAdded }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [successMsg, setSuccessMsg] = useState(null);
   const [roles, setRoles] = useState([]);
+  const [doctorsList, setDoctorsList] = useState([]);
+  const [staffList, setStaffList] = useState([]);
+  const [loadingProfiles, setLoadingProfiles] = useState(false);
 
   useEffect(() => {
-    const fetchRoles = async () => {
+    const fetchRolesAndProfiles = async () => {
       try {
         const response = await api.get("/users/roles");
-        if (response.status === 200) {
-          setRoles(response.data);
+        if (response.status === 200 && Array.isArray(response.data)) {
+          setRoles(response.data.filter(r => r.name && r.name.toUpperCase() !== "PATIENT"));
         } else {
-          setRoles([{ name: "ADMIN" }, { name: "DOCTOR" }, { name: "RECEPTIONIST" }, { name: "PATIENT" }]);
+          setRoles([{ name: "ADMIN" }, { name: "DOCTOR" }, { name: "RECEPTIONIST" }, { name: "NURSE" }]);
         }
       } catch (err) {
-        setRoles([{ name: "ADMIN" }, { name: "DOCTOR" }, { name: "RECEPTIONIST" }, { name: "PATIENT" }]);
+        setRoles([{ name: "ADMIN" }, { name: "DOCTOR" }, { name: "RECEPTIONIST" }, { name: "NURSE" }]);
+      }
+
+      setLoadingProfiles(true);
+      try {
+        const [docRes, staffRes] = await Promise.allSettled([
+          api.get("/doctors"),
+          api.get("/api/hr/staff")
+        ]);
+        if (docRes.status === "fulfilled" && docRes.value?.data) {
+          const docs = docRes.value.data.content || docRes.value.data;
+          setDoctorsList(Array.isArray(docs) ? docs : []);
+        }
+        if (staffRes.status === "fulfilled" && staffRes.value?.data) {
+          const staff = staffRes.value.data.content || staffRes.value.data;
+          setStaffList(Array.isArray(staff) ? staff : []);
+        }
+      } catch (e) {
+        console.error("Failed to load doctor/staff records", e);
+      } finally {
+        setLoadingProfiles(false);
       }
     };
-    fetchRoles();
+    fetchRolesAndProfiles();
   }, []);
 
   const handleInputChange = (e) => {
@@ -103,32 +128,144 @@ const AddUserForm = ({ onClose, onUserAdded }) => {
   };
 
   const handleRoleSelect = (roleName) => {
-    setFormData({ ...formData, role: roleName });
+    setFormData({
+      ...formData,
+      role: roleName,
+      selectedProfileId: "",
+      firstName: "",
+      lastName: "",
+      phone: "",
+      email: "",
+      username: ""
+    });
+    setError(null);
+  };
+
+  const splitFullName = (fullNameStr = "") => {
+    const cleaned = fullNameStr.replace(/^Dr\.?\s+/i, "").trim();
+    const parts = cleaned.split(/\s+/);
+    const firstName = parts[0] || "";
+    const lastName = parts.slice(1).join(" ") || "";
+    return { firstName, lastName };
+  };
+
+  const handleProfileSelect = (e) => {
+    const selectedId = e.target.value;
+    if (!selectedId) {
+      setFormData({
+        ...formData,
+        selectedProfileId: "",
+        firstName: "",
+        lastName: "",
+        phone: "",
+        email: "",
+        username: ""
+      });
+      return;
+    }
+
+    if (formData.role === "DOCTOR") {
+      const doc = doctorsList.find(d => String(d.doctorId) === String(selectedId));
+      if (doc) {
+        const { firstName, lastName } = splitFullName(doc.doctorName || "");
+        const suggestedUsername = doc.username ||
+          `dr.${firstName.toLowerCase()}${lastName ? "." + lastName.toLowerCase().replace(/\s+/g, "") : ""}`;
+        setFormData({
+          ...formData,
+          selectedProfileId: String(doc.doctorId),
+          firstName,
+          lastName,
+          phone: doc.contact || "",
+          email: doc.email || formData.email,
+          username: suggestedUsername
+        });
+      }
+    } else {
+      const staff = staffList.find(s => String(s.id) === String(selectedId));
+      if (staff) {
+        const { firstName, lastName } = splitFullName(staff.fullName || "");
+        const suggestedUsername = staff.username ||
+          `${firstName.toLowerCase()}${lastName ? "." + lastName.toLowerCase().replace(/\s+/g, "") : ""}`;
+        setFormData({
+          ...formData,
+          selectedProfileId: String(staff.id),
+          firstName,
+          lastName,
+          phone: staff.contactNumber || "",
+          email: staff.email || formData.email,
+          username: suggestedUsername
+        });
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.role) {
-      setError("Please select a role.");
+      setError("Step 1: Please select a staff/doctor role first.");
+      return;
+    }
+    if (!formData.selectedProfileId) {
+      setError(
+        formData.role === "DOCTOR"
+          ? "Please select an onboarded Doctor from the dropdown first."
+          : "Please select an onboarded Staff member from the dropdown first."
+      );
       return;
     }
     setLoading(true);
     setError(null);
+    setSuccessMsg(null);
     try {
       const payload = {
-        username: formData.username,
-        email: formData.email,
+        username: formData.username.trim(),
+        email: formData.email.trim(),
         role: formData.role,
         phone: formData.phone
       };
       
-      const response = await api.post("/users/admin/register", payload);
-      if (response.status === 200 || response.status === 201) {
-        if (onUserAdded) onUserAdded();
-        onClose();
+      let createdUserId = null;
+      try {
+        const response = await api.post("/users/admin/register", payload);
+        if (response.status === 200 || response.status === 201) {
+          const createdUser = response.data;
+          createdUserId = createdUser?.userId || createdUser?.id || null;
+        }
+      } catch (regErr) {
+        const errMsg = regErr.response?.data?.message || regErr.response?.data || "";
+        // If user already exists from a previous partial attempt, fetch existing user to complete profile linking
+        if (typeof errMsg === "string" && errMsg.toLowerCase().includes("already exists")) {
+          const existingRes = await api.get(`/users/username/${encodeURIComponent(formData.username.trim())}`);
+          createdUserId = existingRes.data?.userId || existingRes.data?.id || null;
+        } else {
+          throw regErr;
+        }
       }
+
+      // Sync username & userId to Doctor or Staff table
+      if (formData.role === "DOCTOR") {
+        await api.put(`/doctors/${formData.selectedProfileId}/assign-user`, {
+          username: formData.username.trim(),
+          userId: createdUserId,
+          email: formData.email.trim()
+        });
+      } else {
+        await api.put(`/api/hr/staff/${formData.selectedProfileId}/assign-user`, {
+          username: formData.username.trim(),
+          userId: createdUserId,
+          email: formData.email.trim(),
+          role: formData.role
+        });
+      }
+
+      setSuccessMsg(`User account '${formData.username}' created and linked to ${formData.role} profile!`);
+      if (onUserAdded) onUserAdded();
+      if (onClose) onClose();
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data || "Failed to create user.");
+      const msg = typeof err.response?.data === "string"
+        ? err.response.data
+        : (err.response?.data?.message || "Failed to create user.");
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -201,63 +338,146 @@ const AddUserForm = ({ onClose, onUserAdded }) => {
 
           <form id="addUserForm" className={styles.formBody} onSubmit={handleSubmit}>
             {error && <div className={styles.errorMessage}>{error}</div>}
+            {successMsg && <div className={styles.successMessage}>{successMsg}</div>}
+
+            <div className={styles.helperBanner}>
+              <strong>Hospital Staff & Doctor Account Provisioning:</strong> Select a role below, then pick an onboarded Doctor or HR Staff member to link their login username automatically. (Patients register via Receptionist Patient Onboarding or Self-Registration.)
+            </div>
+
+            <div className={styles.inputGroup}>
+              <label>1. Select Role *</label>
+              <div className={styles.roleGrid}>
+                {roles
+                  .filter(r => r.name && r.name.toUpperCase() !== "PATIENT")
+                  .map(r => {
+                    const meta = roleMeta[r.name] || roleMeta.ADMIN;
+                    const isSelected = formData.role === r.name;
+                    return (
+                      <div 
+                        key={r.name}
+                        className={`${styles.roleCard} ${isSelected ? styles.selectedRole : ''}`}
+                        onClick={() => handleRoleSelect(r.name)}
+                        style={isSelected ? { borderColor: `${meta.color}60`, backgroundColor: `${meta.color}08` } : {}}
+                      >
+                        <div className={styles.roleIcon} style={{ color: meta.color, backgroundColor: `${meta.color}15` }}>
+                          {meta.icon}
+                        </div>
+                        <div className={styles.roleInfo}>
+                          <div className={styles.roleName}>{r.name}</div>
+                          <div className={styles.roleDesc}>{meta.desc}</div>
+                        </div>
+                        {isSelected && (
+                          <div className={styles.roleCheckmark} style={{ color: meta.color }}>
+                            <CheckCircle2 size={16} />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+
+            <div className={styles.inputGroup}>
+              <label>
+                {formData.role === "DOCTOR"
+                  ? "2. Select Onboarded Doctor (from Doctors Table) *"
+                  : "2. Select Onboarded Staff Member (from HR Staff Table) *"}
+              </label>
+              <select
+                className={styles.profileSelect}
+                value={formData.selectedProfileId}
+                onChange={handleProfileSelect}
+                disabled={!formData.role || loadingProfiles}
+                required
+              >
+                <option value="">
+                  {!formData.role
+                    ? "-- Select a Role above first --"
+                    : loadingProfiles
+                    ? "Loading directory records..."
+                    : formData.role === "DOCTOR"
+                    ? `-- Choose Doctor (${doctorsList.length} available) --`
+                    : `-- Choose HR Staff Member (${staffList.length} available) --`}
+                </option>
+                {formData.role === "DOCTOR"
+                  ? doctorsList.map(doc => (
+                      <option key={doc.doctorId} value={doc.doctorId}>
+                        {doc.doctorName} ({doc.doctorCode || `ID #${doc.doctorId}`} - {doc.specialization || "General"})
+                        {doc.username ? ` [Current Username: ${doc.username}]` : " [No Login Yet]"}
+                      </option>
+                    ))
+                  : staffList.map(st => (
+                      <option key={st.id} value={st.id}>
+                        {st.fullName} ({st.staffCode || `ID #${st.id}`}{st.role ? ` - ${st.role}` : ""})
+                        {st.username ? ` [Current Username: ${st.username}]` : " [No Login Yet]"}
+                      </option>
+                    ))}
+              </select>
+            </div>
             
             <div className={styles.inputRow}>
               <div className={styles.inputGroup}>
-                <label>First Name</label>
-                <input type="text" name="firstName" placeholder="Alex" value={formData.firstName} onChange={handleInputChange} required />
+                <label>First Name (Auto-filled)</label>
+                <input
+                  type="text"
+                  name="firstName"
+                  placeholder="Select profile above"
+                  value={formData.firstName}
+                  onChange={handleInputChange}
+                  className={styles.readOnlyInput}
+                  readOnly
+                  required
+                />
               </div>
               <div className={styles.inputGroup}>
-                <label>Last Name</label>
-                <input type="text" name="lastName" placeholder="Morgan" value={formData.lastName} onChange={handleInputChange} required />
+                <label>Last Name (Auto-filled)</label>
+                <input
+                  type="text"
+                  name="lastName"
+                  placeholder="Select profile above"
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  className={styles.readOnlyInput}
+                  readOnly
+                />
               </div>
             </div>
             
             <div className={styles.inputRow}>
               <div className={styles.inputGroup}>
-                <label>Username</label>
-                <input type="text" name="username" placeholder="alex.morgan" value={formData.username} onChange={handleInputChange} required minLength={3} />
+                <label>Login Username * (Synced to {formData.role === "DOCTOR" ? "Doctors" : "Staff"} Table)</label>
+                <input
+                  type="text"
+                  name="username"
+                  placeholder="e.g. dr.john.smith"
+                  value={formData.username}
+                  onChange={handleInputChange}
+                  required
+                  minLength={3}
+                />
               </div>
               <div className={styles.inputGroup}>
-                <label>Email Address</label>
-                <input type="email" name="email" placeholder="user@medcenter.com" value={formData.email} onChange={handleInputChange} required />
+                <label>Email Address *</label>
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="user@medcenter.com"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                />
               </div>
             </div>
 
             <div className={styles.inputGroup}>
               <label>Phone Number</label>
-              <input type="tel" name="phone" placeholder="+1 (555) 000-0000" value={formData.phone} onChange={handleInputChange} />
-            </div>
-
-            <div className={styles.inputGroup}>
-              <label>Role</label>
-              <div className={styles.roleGrid}>
-                {roles.map(r => {
-                  const meta = roleMeta[r.name] || roleMeta.ADMIN;
-                  const isSelected = formData.role === r.name;
-                  return (
-                    <div 
-                      key={r.name}
-                      className={`${styles.roleCard} ${isSelected ? styles.selectedRole : ''}`}
-                      onClick={() => handleRoleSelect(r.name)}
-                      style={isSelected ? { borderColor: `${meta.color}60`, backgroundColor: `${meta.color}08` } : {}}
-                    >
-                      <div className={styles.roleIcon} style={{ color: meta.color, backgroundColor: `${meta.color}15` }}>
-                        {meta.icon}
-                      </div>
-                      <div className={styles.roleInfo}>
-                        <div className={styles.roleName}>{r.name}</div>
-                        <div className={styles.roleDesc}>{meta.desc}</div>
-                      </div>
-                      {isSelected && (
-                        <div className={styles.roleCheckmark} style={{ color: meta.color }}>
-                          <CheckCircle2 size={16} />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+              <input
+                type="tel"
+                name="phone"
+                placeholder="9876543210"
+                value={formData.phone}
+                onChange={handleInputChange}
+              />
             </div>
           </form>
 
