@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import styles from './Sidebar.module.css';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen = false, onClose }) => {
   const navigate = useNavigate();
   const rawRole = localStorage.getItem('role') || 'SUPER_ADMIN';
   const role = rawRole.toUpperCase().replace('-', '_');
@@ -51,7 +51,7 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className={styles.sidebar}>
+    <aside className={`${styles.sidebar} ${isOpen ? styles.sidebarOpen : ''}`}>
       {/* Brand Header */}
       <div className={styles.sidebarHeader}>
         <div className={styles.logoContainer}>
@@ -190,6 +190,21 @@ const Sidebar = () => {
                   <Activity size={19} className={styles.itemIcon} />
                   <span>Attendance Pulse</span>
                 </NavLink>
+
+                <NavLink to="/admin/payroll" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
+                  <Receipt size={19} className={styles.itemIcon} />
+                  <span>Payroll & Extra Duty</span>
+                </NavLink>
+
+                <NavLink to="/admin/billing-ops" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
+                  <Receipt size={19} className={styles.itemIcon} />
+                  <span>Clearance & Refunds</span>
+                </NavLink>
+
+                <NavLink to="/admin/clinical-records" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
+                  <ClipboardList size={19} className={styles.itemIcon} />
+                  <span>Vitals & Discharge</span>
+                </NavLink>
               </>
             )}
 
@@ -229,6 +244,12 @@ const Sidebar = () => {
             </NavLink>
             <NavLink to="/doctor/leaves" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
               <Clock size={19} className={styles.itemIcon} /> <span>My Leave Applications</span>
+            </NavLink>
+            <NavLink to="/doctor/payslips" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
+              <Receipt size={19} className={styles.itemIcon} /> <span>My Payslips</span>
+            </NavLink>
+            <NavLink to="/doctor/clinical-records" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
+              <ClipboardList size={19} className={styles.itemIcon} /> <span>Vitals & Discharge</span>
             </NavLink>
           </>
         )}

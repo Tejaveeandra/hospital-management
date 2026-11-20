@@ -11,9 +11,9 @@ const ReceptionistRoutes = () => {
     <AdminLayout>
       <Routes>
         <Route path="/" element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<PatientPage isEmbedded={true} initialOperation="viewAll" />} />
-        <Route path="patient-registration" element={<PatientPage isEmbedded={true} initialOperation="create" />} />
-        <Route path="walk-in-appointments" element={<AppointmentPage isEmbedded={true} initialOperation="Create Appointment" />} />
+        <Route path="dashboard" element={<PatientPage isEmbedded={true} showHeaders={false} initialOperation="viewAll" />} />
+        <Route path="patient-registration" element={<PatientPage isEmbedded={true} showHeaders={false} initialOperation="create" />} />
+        <Route path="walk-in-appointments" element={<AppointmentPage isEmbedded={true} operationMode="create" initialOperation="create" />} />
         <Route path="doctor-availability" element={<ShiftManagementPage />} />
         <Route path="beds" element={<BedManagementPage isEmbedded={true} />} />
         <Route path="*" element={<Navigate to="dashboard" replace />} />

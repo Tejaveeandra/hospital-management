@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import api from "../api/api";
 import { Stethoscope, UserPlus, Search, Edit3, Trash2, ArrowLeft } from "lucide-react";
+import { showToast } from "../components/ToastPopup";
 import styles from "./DoctorPage.module.css";
 
 // DoctorContent component with React.memo
@@ -27,6 +28,12 @@ const DoctorContent = React.memo(({
   departments,
   subDepartments,
   onDeptChange,
+  compDoctor,
+  setCompDoctor,
+  compForm,
+  setCompForm,
+  onOpenCompensation,
+  onSaveCompensation,
 }) => {
   return (
     <div className={styles['right-panel']}>
@@ -217,6 +224,75 @@ const DoctorContent = React.memo(({
                         <input type="number" name="yoe" placeholder="e.g. 12" value={formData.yoe} onChange={handleInputChange} required min="0" disabled={loading} />
                       </div>
                     </div>
+
+                    {operationMode === "create" && (
+                      <div style={{ marginTop: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+                        <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.98rem', color: '#0f172a' }}>Compensation Contract</h4>
+                        <div className={styles.inputRow}>
+                          <div className={styles.inputGroup}>
+                            <label>Compensation Type</label>
+                            <select
+                              value={compForm.compensationType}
+                              onChange={e => setCompForm({ ...compForm, compensationType: e.target.value })}
+                              disabled={loading}
+                            >
+                              <option value="COMMISSION">COMMISSION (Per-Consultation)</option>
+                              <option value="FIXED">FIXED (Monthly Salary)</option>
+                              <option value="HYBRID">HYBRID (Base Salary + Share)</option>
+                            </select>
+                          </div>
+
+                          {(compForm.compensationType === "FIXED" || compForm.compensationType === "HYBRID") && (
+                            <div className={styles.inputGroup}>
+                              <label>Base Salary (₹)</label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                placeholder="e.g. 150000"
+                                value={compForm.baseSalary}
+                                onChange={e => setCompForm({ ...compForm, baseSalary: e.target.value })}
+                                required
+                                disabled={loading}
+                              />
+                            </div>
+                          )}
+
+                          {(compForm.compensationType === "COMMISSION" || compForm.compensationType === "HYBRID") && (
+                            <>
+                              <div className={styles.inputGroup}>
+                                <label>Consultation Fee (₹)</label>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  placeholder="e.g. 500"
+                                  value={compForm.consultationFee}
+                                  onChange={e => setCompForm({ ...compForm, consultationFee: e.target.value })}
+                                  required
+                                  disabled={loading}
+                                />
+                              </div>
+                              <div className={styles.inputGroup}>
+                                <label>Doctor Share (%)</label>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  max="100"
+                                  placeholder="e.g. 70"
+                                  value={compForm.consultationSharePercent}
+                                  onChange={e => setCompForm({ ...compForm, consultationSharePercent: e.target.value })}
+                                  required
+                                  disabled={loading}
+                                />
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     <div className={styles['doctor-action-buttons']}>
                       <button type="submit" className={styles.submitBtn} disabled={loading}>
                         {loading ? (operationMode === "create" ? "Creating..." : "Updating...") : (operationMode === "create" ? "Create Doctor Profile" : "Update Doctor Profile")}
@@ -304,8 +380,58 @@ const DoctorPage = ({ initialOperation, showHeaders = false }) => {
   const [subDepartments, setSubDepartments] = useState([]);
   const [createdDoctor, setCreatedDoctor] = useState(null);
   const [doctorFetched, setDoctorFetched] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessageState] = useState("");
+  const setMessage = useCallback((m) => {
+    setMessageState(m);
+    if (m) showToast(m, (m.toLowerCase().includes("error") || m.toLowerCase().includes("failed") || m.toLowerCase().includes("not found")) ? "error" : "success");
+  }, []);
   const [loading, setLoading] = useState(false);
+  const [compDoctor, setCompDoctor] = useState(null);
+  const [compForm, setCompForm] = useState({
+    compensationType: "COMMISSION",
+    baseSalary: "0",
+    consultationFee: "500",
+    consultationSharePercent: "70",
+    active: true,
+  });
+
+  const onOpenCompensation = useCallback(async (doctor) => {
+    setCompDoctor(doctor);
+    setMessage("");
+    try {
+      const res = await api.get(`/doctors/${doctor.doctorId}/compensation`);
+      if (res.data) {
+        setCompForm({
+          compensationType: res.data.compensationType || "COMMISSION",
+          baseSalary: String(res.data.baseSalary ?? 0),
+          consultationFee: String(res.data.consultationFee ?? 500),
+          consultationSharePercent: String(res.data.consultationSharePercent ?? 70),
+          active: res.data.active !== false,
+        });
+      }
+    } catch { /* No existing contract yet */ }
+  }, []);
+
+  const onSaveCompensation = useCallback(async (e) => {
+    e.preventDefault();
+    if (!compDoctor) return;
+    setLoading(true);
+    try {
+      await api.post(`/doctors/${compDoctor.doctorId}/compensation`, {
+        compensationType: compForm.compensationType,
+        baseSalary: parseFloat(compForm.baseSalary || "0"),
+        consultationFee: parseFloat(compForm.consultationFee || "500"),
+        consultationSharePercent: parseFloat(compForm.consultationSharePercent || "70"),
+        active: compForm.active,
+      });
+      setMessage(`Compensation contract saved for ${compDoctor.doctorName}.`);
+      setCompDoctor(null);
+    } catch (err) {
+      setMessage(err.response?.data?.message || "Failed to save compensation contract.");
+    } finally {
+      setLoading(false);
+    }
+  }, [compDoctor, compForm]);
 
   // Pagination and View All Doctors State
   const [allDoctors, setAllDoctors] = useState([]);
@@ -466,8 +592,22 @@ const DoctorPage = ({ initialOperation, showHeaders = false }) => {
         setDoctorFetched(false);
       } else if (operationMode === "create") {
         response = await api.post("/doctors/addDoctor", payload);
-        setDoctorId(response.data.doctorId);
-        setMessage(`Doctor created successfully with ID: ${response.data.doctorId}`);
+        const newDocId = response.data.doctorId;
+        setDoctorId(newDocId);
+        try {
+          const isFixed = compForm.compensationType === "FIXED";
+          const isComm = compForm.compensationType === "COMMISSION";
+          await api.post(`/doctors/${newDocId}/compensation`, {
+            compensationType: compForm.compensationType,
+            baseSalary: isComm ? 0 : parseFloat(compForm.baseSalary || "0"),
+            consultationFee: isFixed ? 0 : parseFloat(compForm.consultationFee || "500"),
+            consultationSharePercent: isFixed ? 0 : parseFloat(compForm.consultationSharePercent || "70"),
+            active: true,
+          });
+          setMessage(`Doctor & compensation contract created (ID: ${newDocId})`);
+        } catch {
+          setMessage(`Doctor created (ID: ${newDocId}), but compensation contract failed to save.`);
+        }
         setCreatedDoctor(response.data);
       }
     } catch (error) {
@@ -475,7 +615,7 @@ const DoctorPage = ({ initialOperation, showHeaders = false }) => {
     } finally {
       setLoading(false);
     }
-  }, [operationMode, doctorId, formData, userRole]);
+  }, [operationMode, doctorId, formData, userRole, compForm]);
 
   const handleDeleteDoctor = useCallback(async () => {
     if (!doctorId) {
@@ -649,6 +789,12 @@ const DoctorPage = ({ initialOperation, showHeaders = false }) => {
             departments={departments}
             subDepartments={subDepartments}
             onDeptChange={handleDeptChange}
+            compDoctor={compDoctor}
+            setCompDoctor={setCompDoctor}
+            compForm={compForm}
+            setCompForm={setCompForm}
+            onOpenCompensation={onOpenCompensation}
+            onSaveCompensation={onSaveCompensation}
           />
         </div>
       )}

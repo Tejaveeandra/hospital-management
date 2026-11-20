@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../api/api';
 import { Pill, FileText, CheckCircle2, AlertCircle, PlusCircle, Search, RefreshCw, Send, ArrowLeft } from 'lucide-react';
+import { showToast } from '../components/ToastPopup';
 import styles from './PrescriptionsPage.module.css';
 
 const PrescriptionsPage = ({ initialOperation }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [operationMode, setOperationMode] = useState(initialOperation || searchParams.get('op') || null); // 'list' | 'create' | 'dispense' | 'byPatient'
   const [prescriptions, setPrescriptions] = useState([]);
+  const [storeMedicines, setStoreMedicines] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
 
@@ -31,6 +33,7 @@ const PrescriptionsPage = ({ initialOperation }) => {
 
   const showNotification = (text, type = 'info') => {
     setMessage({ text, type });
+    if (text) showToast(text, type === 'error' ? 'error' : 'success');
     setTimeout(() => setMessage(null), 5000);
   };
 
@@ -63,6 +66,9 @@ const PrescriptionsPage = ({ initialOperation }) => {
 
   useEffect(() => {
     fetchAllPrescriptions();
+    api.get('/api/medicine-store/list')
+      .then(res => setStoreMedicines(Array.isArray(res.data) ? res.data : []))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -158,8 +164,11 @@ const PrescriptionsPage = ({ initialOperation }) => {
         patientUhid: createForm.patientUhid.trim(),
         doctorCode: createForm.doctorCode.trim() || 'DOC-GEN',
         prescriptionDate: createForm.prescriptionDate,
+        confirmAllergyOverride: false,
         medicines: createForm.medicines.map(m => ({
           medicineName: m.medicineName,
+          storeMedicineId: m.storeMedicineId || null,
+          outsidePharmacy: Boolean(m.outsidePharmacy),
           dosage: m.dosage,
           duration: m.duration,
           isMorning: Boolean(m.isMorning),
@@ -169,7 +178,22 @@ const PrescriptionsPage = ({ initialOperation }) => {
         }))
       };
 
-      const res = await api.post('/api/prescriptions', payload);
+      let res;
+      try {
+        res = await api.post('/api/prescriptions', payload);
+      } catch (err) {
+        const errMsg = err.response?.data?.message || err.message || '';
+        if (errMsg.includes('ALLERGY_ALERT')) {
+          const override = window.confirm(`${errMsg}\n\nDo you still want to prescribe and override this allergy alert?`);
+          if (!override) {
+            setLoading(false);
+            return;
+          }
+          res = await api.post('/api/prescriptions', { ...payload, confirmAllergyOverride: true });
+        } else {
+          throw err;
+        }
+      }
       showNotification(`Prescription created successfully! Code: ${res.data?.prescriptionCode || 'Generated'}`, 'success');
       setCreateForm({
         patientUhid: '',
@@ -400,16 +424,53 @@ const PrescriptionsPage = ({ initialOperation }) => {
             <h4>Medication Items</h4>
             {createForm.medicines.map((med, idx) => (
               <div key={idx} className={styles.medicineRow}>
-                <div style={{ flex: 2, minWidth: '180px' }}>
-                  <label>Medicine Name</label>
-                  <input 
-                    type="text" 
-                    placeholder="e.g. Paracetamol 500mg" 
-                    value={med.medicineName} 
-                    onChange={e => handleMedicineChange(idx, 'medicineName', e.target.value)} 
-                    required 
+                <div style={{ flex: 2, minWidth: '220px' }}>
+                  <label>Medicine Name (Store / Outside)</label>
+                  <select
+                    value={med.outsidePharmacy ? '__OUTSIDE__' : (med.storeMedicineId || '')}
+                    onChange={e => {
+                      const val = e.target.value;
+                      if (val === '__OUTSIDE__') {
+                        setCreateForm(prev => {
+                          const updated = [...prev.medicines];
+                          updated[idx] = { ...updated[idx], outsidePharmacy: true, storeMedicineId: null, medicineName: '' };
+                          return { ...prev, medicines: updated };
+                        });
+                      } else {
+                        const found = storeMedicines.find(sm => String(sm.id) === val);
+                        setCreateForm(prev => {
+                          const updated = [...prev.medicines];
+                          updated[idx] = {
+                            ...updated[idx],
+                            outsidePharmacy: false,
+                            storeMedicineId: found ? found.id : null,
+                            medicineName: found ? found.name : ''
+                          };
+                          return { ...prev, medicines: updated };
+                        });
+                      }
+                    }}
+                    required={!med.outsidePharmacy}
                     style={{ width: '100%', margin: 0 }}
-                  />
+                  >
+                    <option value="">-- Select Store Medicine --</option>
+                    {storeMedicines.map(sm => (
+                      <option key={sm.id} value={sm.id} disabled={sm.stockCount <= 0}>
+                        {sm.name} — Stock: {sm.stockCount} (₹{sm.price}){sm.batchNumber ? ` | Batch: ${sm.batchNumber}` : ''}{sm.expiryDate ? ` | Exp: ${sm.expiryDate}` : ''}
+                      </option>
+                    ))}
+                    <option value="__OUTSIDE__">Other / Outside Pharmacy (Not in Store)</option>
+                  </select>
+                  {med.outsidePharmacy && (
+                    <input
+                      type="text"
+                      placeholder="Enter outside medicine name *"
+                      value={med.medicineName}
+                      onChange={e => handleMedicineChange(idx, 'medicineName', e.target.value)}
+                      required
+                      style={{ width: '100%', marginTop: '6px' }}
+                    />
+                  )}
                 </div>
 
                 <div style={{ flex: 1, minWidth: '120px' }}>

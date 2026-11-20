@@ -427,3 +427,11 @@
   border: 1px solid rgba(var(--lk-rgb), 0.2);
   text-shadow: 0 0 14px rgba(var(--lk-rgb), 0.9);
 }
+
+@media (max-width: 768px) {
+  .container, .card, .formContainer {
+    padding: 18px !important;
+    width: 94% !important;
+    max-width: 100% !important;
+  }
+}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../api/api";
+import { showToast } from "../components/ToastPopup";
 import styles from "./MedicineStorePage.module.css";
 
 const MedicineStorePage = ({ allowedOperations = [], initialOperation, isEmbedded = false }) => {
@@ -10,8 +11,19 @@ const MedicineStorePage = ({ allowedOperations = [], initialOperation, isEmbedde
   const [updateId, setUpdateId] = useState("");
   const [updateData, setUpdateData] = useState({ name: "", price: "", stockCount: "" });
   const [deleteId, setDeleteId] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessageState] = useState("");
+  const setMessage = (m) => {
+    setMessageState(m);
+    if (m) showToast(m, m.toLowerCase().includes("error") ? "error" : "success");
+  };
   const [loading, setLoading] = useState(false);
+  const [alerts, setAlerts] = useState({ lowStock: [], expiringSoon: [] });
+  const [selectedBatches, setSelectedBatches] = useState([]);
+  const [batchMedName, setBatchMedName] = useState("");
+  const [grnForm, setGrnForm] = useState({
+    storeMedicineId: "", supplierName: "", supplierInvoiceNo: "",
+    batchNumber: "", expiryDate: "", quantityReceived: "", purchasePrice: "", mrp: ""
+  });
 
   useEffect(() => {
     if (initialOperation) setOperationMode(initialOperation);
@@ -25,8 +37,12 @@ const MedicineStorePage = ({ allowedOperations = [], initialOperation, isEmbedde
   const fetchList = async () => {
     setLoading(true);
     try {
-      const res = await api.get("/api/medicine-store/list");
+      const [res, alertsRes] = await Promise.all([
+        api.get("/api/medicine-store/list"),
+        api.get("/api/medicines/inventory-alerts").catch(() => ({ data: { lowStock: [], expiringSoon: [] } }))
+      ]);
       setItems(Array.isArray(res.data) ? res.data : []);
+      setAlerts(alertsRes.data || { lowStock: [], expiringSoon: [] });
       setMessage("Store list loaded.");
     } catch (e) {
       setMessage("Error loading medicine store.");
@@ -130,6 +146,37 @@ const MedicineStorePage = ({ allowedOperations = [], initialOperation, isEmbedde
     }
   };
 
+  const handleViewBatches = async (item) => {
+    try {
+      const res = await api.get(`/api/medicine-store/${item.id}/batches`);
+      setSelectedBatches(res.data || []);
+      setBatchMedName(item.name);
+    } catch {
+      setMessage("Error loading batches.");
+    }
+  };
+
+  const handleReceiveGrn = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await api.post("/api/medicine-store/grn", {
+        ...grnForm,
+        storeMedicineId: Number(grnForm.storeMedicineId),
+        quantityReceived: Number(grnForm.quantityReceived),
+        purchasePrice: grnForm.purchasePrice ? Number(grnForm.purchasePrice) : 0,
+        mrp: grnForm.mrp ? Number(grnForm.mrp) : 0,
+      });
+      setMessage("Supplier GRN stock received & batch created.");
+      setGrnForm({ storeMedicineId: "", supplierName: "", supplierInvoiceNo: "", batchNumber: "", expiryDate: "", quantityReceived: "", purchasePrice: "", mrp: "" });
+      fetchList();
+    } catch (err) {
+      setMessage(err.response?.data?.message || "Error receiving GRN stock.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const showList = operationMode === "List Medicine Store" || operationMode === "View Medicine Store";
   const showSearch = operationMode === "Search Medicine" || operationMode === "Get by Name";
   const showAdd = operationMode === "Add to Store" || operationMode === "Add Medicine";
@@ -153,15 +200,27 @@ const MedicineStorePage = ({ allowedOperations = [], initialOperation, isEmbedde
               <div className={styles.headerSubtitle}>Available medicines, pricing, and stock levels</div>
             </div>
           </div>
+          {(alerts.lowStock?.length > 0 || alerts.expiringSoon?.length > 0) && (
+            <div style={{ padding: "0.75rem 1rem", background: "#fef3c7", border: "1px solid #f59e0b", borderRadius: 8, marginBottom: "1rem", color: "#92400e", fontSize: "0.9rem" }}>
+              {alerts.lowStock?.length > 0 && (
+                <div><strong>Low Stock ({alerts.lowStock.length}):</strong> {alerts.lowStock.map(m => `${m.name} (${m.stockCount})`).join(", ")}</div>
+              )}
+              {alerts.expiringSoon?.length > 0 && (
+                <div><strong>Expiring Soon ({alerts.expiringSoon.length}):</strong> {alerts.expiringSoon.map(m => `${m.name} (${m.expiryDate})`).join(", ")}</div>
+              )}
+            </div>
+          )}
           {items.length > 0 ? (
             <table className={styles.table}>
               <thead>
                 <tr>
                   <th>ID</th>
                   <th>Medicine Name</th>
+                  <th>FEFO Batch / Expiry</th>
                   <th>Price ($)</th>
                   <th>Stock Count</th>
                   <th>Status</th>
+                  <th>Batches</th>
                 </tr>
               </thead>
               <tbody>
@@ -169,12 +228,16 @@ const MedicineStorePage = ({ allowedOperations = [], initialOperation, isEmbedde
                   <tr key={item.id}>
                     <td className={styles.idCell}>#{item.id}</td>
                     <td className={styles.nameCell}>{item.name}</td>
+                    <td>{item.batchNumber || '-'} {item.expiryDate ? `(Exp: ${item.expiryDate})` : ''}</td>
                     <td className={styles.priceCell}>${Number(item.price).toFixed(2)}</td>
                     <td>{item.stockCount} units</td>
                     <td>
                       <span className={`${styles.stockBadge} ${item.stockCount > 10 ? styles.stockGood : item.stockCount > 0 ? styles.stockLow : styles.stockOut}`}>
                         {item.stockCount > 10 ? 'In Stock' : item.stockCount > 0 ? 'Low Stock' : 'Out of Stock'}
                       </span>
+                    </td>
+                    <td>
+                      <button type="button" onClick={() => handleViewBatches(item)}>View Batches</button>
                     </td>
                   </tr>
                 ))}
@@ -183,6 +246,35 @@ const MedicineStorePage = ({ allowedOperations = [], initialOperation, isEmbedde
           ) : (
             <p className={styles.emptyMessage}>No medicines in store.</p>
           )}
+          {batchMedName && (
+            <div style={{ marginTop: "1rem", padding: "0.75rem", background: "#f8fafc", borderRadius: 8 }}>
+              <strong>Batches for {batchMedName} (FEFO Order):</strong>
+              {selectedBatches.length === 0 ? <div>No batch records yet (legacy stock).</div> : (
+                <ul>
+                  {selectedBatches.map(b => (
+                    <li key={b.batchId}>Batch {b.batchNumber} — Qty: {b.quantityAvailable}, Expiry: {b.expiryDate || "N/A"}, MRP: ₹{b.mrp}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+          <div style={{ marginTop: "1.25rem", padding: "1rem", background: "#f8fafc", borderRadius: 8 }}>
+            <h4 style={{ marginTop: 0 }}>Stock-In / Supplier GRN (Multi-Batch)</h4>
+            <form onSubmit={handleReceiveGrn} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: "0.6rem", alignItems: "center" }}>
+              <select value={grnForm.storeMedicineId} onChange={e => setGrnForm({ ...grnForm, storeMedicineId: e.target.value })} required>
+                <option value="">Select Medicine</option>
+                {items.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+              <input placeholder="Supplier Name" value={grnForm.supplierName} onChange={e => setGrnForm({ ...grnForm, supplierName: e.target.value })} required />
+              <input placeholder="Supplier Invoice No" value={grnForm.supplierInvoiceNo} onChange={e => setGrnForm({ ...grnForm, supplierInvoiceNo: e.target.value })} required />
+              <input placeholder="Batch No" value={grnForm.batchNumber} onChange={e => setGrnForm({ ...grnForm, batchNumber: e.target.value })} required />
+              <input type="date" title="Expiry Date" value={grnForm.expiryDate} onChange={e => setGrnForm({ ...grnForm, expiryDate: e.target.value })} required />
+              <input type="number" min="1" placeholder="Qty" value={grnForm.quantityReceived} onChange={e => setGrnForm({ ...grnForm, quantityReceived: e.target.value })} required />
+              <input type="number" step="0.01" placeholder="Purchase Price ₹" value={grnForm.purchasePrice} onChange={e => setGrnForm({ ...grnForm, purchasePrice: e.target.value })} />
+              <input type="number" step="0.01" placeholder="MRP ₹" value={grnForm.mrp} onChange={e => setGrnForm({ ...grnForm, mrp: e.target.value })} />
+              <button type="submit" disabled={loading}>Receive Stock (GRN)</button>
+            </form>
+          </div>
         </div>
       )}
 

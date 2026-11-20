@@ -6,6 +6,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import LockoutScreen from './pages/LockoutScreen';
 import ProtectedRoute from './components/ProtectedRoute';
 import SessionManager from './components/SessionManager';
+import ToastPopup from './components/ToastPopup';
 
 import AdminRoutes from './routes/AdminRoutes';
 import DoctorRoutes from './routes/DoctorRoutes';
@@ -21,6 +22,7 @@ const App = () => {
   return (
     <Router>
       <SessionManager />
+      <ToastPopup />
       <Routes>
         {/* Public Authentication Routes */}
         <Route path="/" element={<Login />} />

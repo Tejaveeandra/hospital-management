@@ -137,3 +137,80 @@ html, body, #root {
     box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
   }
 }
+
+/* Uniform Global Form, Button & Table Base Styles (0-specificity via :where so page modules always win) */
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea) {
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 9px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-sm, 6px);
+  background-color: #ffffff;
+  color: var(--text-main, #0f172a);
+  transition: var(--transition);
+  min-height: 38px;
+}
+
+:where(input:not([type="checkbox"]):not([type="radio"]):focus, select:focus, textarea:focus) {
+  outline: none;
+  border-color: var(--primary-500, #0284c7);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+}
+
+:where(button) {
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid #cbd5e1;
+  background-color: #f8fafc;
+  color: var(--text-main, #0f172a);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+:where(button[type="submit"]) {
+  background-color: var(--primary-500, #0284c7);
+  color: #ffffff;
+  border-color: var(--primary-500, #0284c7);
+}
+
+:where(button[type="submit"]:hover:not(:disabled)) {
+  background-color: var(--primary-600, #0369a1);
+}
+
+:where(button:disabled) {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+:where(table) {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+:where(th, td) {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  text-align: left;
+}
+
+:where(th) {
+  font-weight: 600;
+  color: #475569;
+  background-color: #f8fafc;
+}
+
+@media (max-width: 768px) {
+  :where(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea, button) {
+    min-height: 42px;
+  }
+
+  :where(table) {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+}

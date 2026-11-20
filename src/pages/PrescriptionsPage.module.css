@@ -57,7 +57,8 @@
 
 .section input[type="text"],
 .section input[type="number"],
-.section input[type="date"] {
+.section input[type="date"],
+.section select {
   padding: 10px 14px;
   margin-bottom: 16px;
   margin-right: 12px;
@@ -69,7 +70,8 @@
   transition: all 0.2s ease;
 }
 
-.section input:focus {
+.section input:focus,
+.section select:focus {
   outline: none;
   border-color: #2563eb;
   background-color: #ffffff;
@@ -366,4 +368,40 @@
 
 .backIcon {
   color: #0284c7;
+}
+
+@media (max-width: 768px) {
+  .container,
+  .pageContainer,
+  .right-panel,
+  .operation-content,
+  .section,
+  .formCard,
+  .tableCard {
+    padding: 14px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .inputRow,
+  .formRow,
+  .medicineRow,
+  .headerRow,
+  .cardsGrid,
+  .profileSummaryGrid,
+  .operation-cards {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin-right: 0 !important;
+  }
 }

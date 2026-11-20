@@ -11,10 +11,10 @@ const PatientRoutes = () => {
     <AdminLayout>
       <Routes>
         <Route path="/" element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<PatientPage isEmbedded={true} initialOperation="view" />} />
-        <Route path="book-appointment" element={<AppointmentPage isEmbedded={true} initialOperation="Create Appointment" />} />
-        <Route path="my-prescriptions" element={<PrescriptionsPage isEmbedded={true} initialOperation="List Prescriptions" />} />
-        <Route path="my-bills" element={<HospitalChargesPage isEmbedded={true} initialOperation="List Charges" />} />
+        <Route path="dashboard" element={<PatientPage isEmbedded={true} showHeaders={false} initialOperation="viewAll" />} />
+        <Route path="book-appointment" element={<AppointmentPage isEmbedded={true} operationMode="create" initialOperation="create" />} />
+        <Route path="my-prescriptions" element={<PrescriptionsPage isEmbedded={true} initialOperation="list" />} />
+        <Route path="my-bills" element={<HospitalChargesPage isEmbedded={true} initialOperation="list" />} />
         <Route path="*" element={<Navigate to="dashboard" replace />} />
       </Routes>
     </AdminLayout>

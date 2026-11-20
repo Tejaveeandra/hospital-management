@@ -1,9 +1,10 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getSurgeryCatalog, createSurgeryCatalog, scheduleSurgery } from '../api/clinicalApi';
 import api from '../api/api';
 import { getPatients } from '../api/facilityApi';
 import styles from './ModulePages.module.css';
 import { useSearchParams } from 'react-router-dom';
+import { showToast } from '../components/ToastPopup';
 
 const SurgeryPage = () => {
   const [searchParams] = useSearchParams();
@@ -24,8 +25,30 @@ const SurgeryPage = () => {
   // Update State
   const [updateId, setUpdateId] = useState('');
 
+  // Implants Registry State
+  const [implantUhid, setImplantUhid] = useState('');
+  const [implantHistory, setImplantHistory] = useState([]);
+  const [implantForm, setImplantForm] = useState({
+    surgeryScheduleId: '',
+    implantName: '',
+    implantType: 'PACEMAKER',
+    itemCode: '',
+    manufacturer: '',
+    modelNumber: '',
+    serialNumber: '',
+    batchNumber: '',
+    warrantyExpiryDate: '',
+    quantity: '1',
+    unitPrice: '',
+    notes: ''
+  });
+
   const [loading, setLoading] = useState(false);
-  const [msg, setMsg] = useState('');
+  const [msg, setMsgState] = useState('');
+  const setMsg = (m) => {
+    setMsgState(m);
+    if (m) showToast(m, (m.includes('Error') || m.includes('Failed')) ? 'error' : 'success');
+  };
 
   useEffect(() => {
     loadCatalog();
@@ -108,6 +131,55 @@ const SurgeryPage = () => {
     }
   };
 
+  const handleLoadImplantHistory = async (e) => {
+    e.preventDefault();
+    if (!implantUhid.trim()) return;
+    setLoading(true); setMsg('');
+    try {
+      const res = await api.get(`/api/surgeries/patient/${encodeURIComponent(implantUhid.trim())}/implants`);
+      setImplantHistory(res.data || []);
+    } catch (e) {
+      setMsg('Failed to load patient implant history.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddImplant = async (e) => {
+    e.preventDefault();
+    setLoading(true); setMsg('');
+    try {
+      const res = await api.post(`/api/surgeries/schedule/${implantForm.surgeryScheduleId}/implants`, {
+        implantName: implantForm.implantName,
+        implantType: implantForm.implantType,
+        itemCode: implantForm.itemCode || undefined,
+        manufacturer: implantForm.manufacturer,
+        modelNumber: implantForm.modelNumber,
+        serialNumber: implantForm.serialNumber,
+        batchNumber: implantForm.batchNumber,
+        warrantyExpiryDate: implantForm.warrantyExpiryDate || null,
+        quantity: parseInt(implantForm.quantity || '1', 10),
+        unitPrice: parseFloat(implantForm.unitPrice || '0'),
+        notes: implantForm.notes
+      });
+      setMsg(`Implant "${res.data.implantName}" (Serial: ${res.data.serialNumber}) recorded permanently & billed!`);
+      if (res.data.patientUhid) {
+        setImplantUhid(res.data.patientUhid);
+        const hist = await api.get(`/api/surgeries/patient/${encodeURIComponent(res.data.patientUhid)}/implants`);
+        setImplantHistory(hist.data || []);
+      }
+      setImplantForm({
+        surgeryScheduleId: '', implantName: '', implantType: 'PACEMAKER', itemCode: '',
+        manufacturer: '', modelNumber: '', serialNumber: '', batchNumber: '',
+        warrantyExpiryDate: '', quantity: '1', unitPrice: '', notes: ''
+      });
+    } catch (e) {
+      setMsg('Failed to record implant: ' + (e.response?.data?.message || e.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className={styles.pageContainer}>
       <h2>Surgery Management</h2>
@@ -183,6 +255,106 @@ const SurgeryPage = () => {
             </tbody>
           </table>
         </div>
+      )}
+
+      {(op === 'viewAll' || op === 'implants') && (
+        <>
+          <div className={styles.formCard} style={{ marginTop: '1.5rem' }}>
+            <h3>Record Surgical Implant / Device (Pacemaker, Stent, Ortho)</h3>
+            <form onSubmit={handleAddImplant} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', alignItems: 'end' }}>
+              <div className={styles.fieldGroup}>
+                <label>Surgery Schedule ID *</label>
+                <input type="number" placeholder="e.g. 101" value={implantForm.surgeryScheduleId} onChange={e => setImplantForm({ ...implantForm, surgeryScheduleId: e.target.value })} required className={styles.formInput} />
+              </div>
+              <div className={styles.fieldGroup}>
+                <label>Implant Type</label>
+                <select value={implantForm.implantType} onChange={e => setImplantForm({ ...implantForm, implantType: e.target.value })} className={styles.formInput}>
+                  <option value="PACEMAKER">PACEMAKER</option>
+                  <option value="STENT">STENT</option>
+                  <option value="ORTHO_IMPLANT">ORTHO_IMPLANT</option>
+                  <option value="LENS">LENS</option>
+                  <option value="OTHER">OTHER</option>
+                </select>
+              </div>
+              <div className={styles.fieldGroup}>
+                <label>Implant Name *</label>
+                <input type="text" placeholder="e.g. Dual-Chamber Pacemaker" value={implantForm.implantName} onChange={e => setImplantForm({ ...implantForm, implantName: e.target.value })} required className={styles.formInput} />
+              </div>
+              <div className={styles.fieldGroup}>
+                <label>Serial Number *</label>
+                <input type="text" placeholder="Device Serial No" value={implantForm.serialNumber} onChange={e => setImplantForm({ ...implantForm, serialNumber: e.target.value })} required className={styles.formInput} />
+              </div>
+              <div className={styles.fieldGroup}>
+                <label>Batch / Lot Number</label>
+                <input type="text" placeholder="Batch / Lot" value={implantForm.batchNumber} onChange={e => setImplantForm({ ...implantForm, batchNumber: e.target.value })} className={styles.formInput} />
+              </div>
+              <div className={styles.fieldGroup}>
+                <label>Manufacturer</label>
+                <input type="text" placeholder="e.g. Medtronic" value={implantForm.manufacturer} onChange={e => setImplantForm({ ...implantForm, manufacturer: e.target.value })} className={styles.formInput} />
+              </div>
+              <div className={styles.fieldGroup}>
+                <label>Model Number</label>
+                <input type="text" placeholder="Model No" value={implantForm.modelNumber} onChange={e => setImplantForm({ ...implantForm, modelNumber: e.target.value })} className={styles.formInput} />
+              </div>
+              <div className={styles.fieldGroup}>
+                <label>Tax Item Code (Optional)</label>
+                <input type="text" placeholder="HSN / Tax Code" value={implantForm.itemCode} onChange={e => setImplantForm({ ...implantForm, itemCode: e.target.value })} className={styles.formInput} />
+              </div>
+              <div className={styles.fieldGroup}>
+                <label>Quantity</label>
+                <input type="number" min="1" placeholder="1" value={implantForm.quantity} onChange={e => setImplantForm({ ...implantForm, quantity: e.target.value })} className={styles.formInput} />
+              </div>
+              <div className={styles.fieldGroup}>
+                <label>Unit Price (₹) *</label>
+                <input type="number" step="0.01" placeholder="0.00" value={implantForm.unitPrice} onChange={e => setImplantForm({ ...implantForm, unitPrice: e.target.value })} required className={styles.formInput} />
+              </div>
+              <div className={styles.fieldGroup}>
+                <label>Warranty Expiry Date</label>
+                <input type="date" value={implantForm.warrantyExpiryDate} onChange={e => setImplantForm({ ...implantForm, warrantyExpiryDate: e.target.value })} className={styles.formInput} />
+              </div>
+              <div className={styles.fieldGroup}>
+                <label>Clinical Notes</label>
+                <input type="text" placeholder="Optional clinical notes" value={implantForm.notes} onChange={e => setImplantForm({ ...implantForm, notes: e.target.value })} className={styles.formInput} />
+              </div>
+              <div style={{ gridColumn: '1 / -1', marginTop: '0.25rem' }}>
+                <button type="submit" disabled={loading} className={styles.submitBtn}>Save Implant & Bill</button>
+              </div>
+            </form>
+          </div>
+
+          <div className={styles.tableCard} style={{ marginTop: '1.5rem' }}>
+            <h3>Patient Lifetime Implant History (Lookup by UHID)</h3>
+            <form onSubmit={handleLoadImplantHistory} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem', alignItems: 'center' }}>
+              <input type="text" placeholder="Enter Patient UHID (e.g. UHID-2026-00123)" value={implantUhid} onChange={e => setImplantUhid(e.target.value)} required className={styles.formInput} style={{ flex: '1 1 320px', maxWidth: '420px' }} />
+              <button type="submit" disabled={loading} className={styles.submitBtn}>Search Implants</button>
+            </form>
+            <table className={styles.dataTable}>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Implant Name</th>
+                  <th>Serial No</th>
+                  <th>Manufacturer / Model</th>
+                  <th>Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                {implantHistory.map(imp => (
+                  <tr key={imp.id}>
+                    <td>{imp.implantedAt ? new Date(imp.implantedAt).toLocaleDateString() : '-'}</td>
+                    <td>{imp.implantType}</td>
+                    <td>{imp.implantName}</td>
+                    <td><strong>{imp.serialNumber}</strong></td>
+                    <td>{[imp.manufacturer, imp.modelNumber].filter(Boolean).join(' / ') || '-'}</td>
+                    <td>₹{imp.totalPrice}</td>
+                  </tr>
+                ))}
+                {implantHistory.length === 0 && <tr><td colSpan="6">No implant records loaded. Search by Patient UHID above.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );

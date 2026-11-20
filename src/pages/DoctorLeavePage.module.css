@@ -124,3 +124,38 @@ label {
 .leaves-table tr:hover {
   background-color: #f5faff;
 }
+@media (max-width: 768px) {
+  .container,
+  .pageContainer,
+  .right-panel,
+  .operation-content,
+  .section,
+  .formCard,
+  .tableCard {
+    padding: 14px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .inputRow,
+  .formRow,
+  .medicineRow,
+  .headerRow,
+  .cardsGrid,
+  .profileSummaryGrid,
+  .operation-cards {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin-right: 0 !important;
+  }
+}

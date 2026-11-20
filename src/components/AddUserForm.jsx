@@ -225,21 +225,10 @@ const AddUserForm = ({ onClose, onUserAdded }) => {
       };
       
       let createdUserId = null;
-      try {
-        const response = await api.post("/users/admin/register", payload);
-        if (response.status === 200 || response.status === 201) {
-          const createdUser = response.data;
-          createdUserId = createdUser?.userId || createdUser?.id || null;
-        }
-      } catch (regErr) {
-        const errMsg = regErr.response?.data?.message || regErr.response?.data || "";
-        // If user already exists from a previous partial attempt, fetch existing user to complete profile linking
-        if (typeof errMsg === "string" && errMsg.toLowerCase().includes("already exists")) {
-          const existingRes = await api.get(`/users/username/${encodeURIComponent(formData.username.trim())}`);
-          createdUserId = existingRes.data?.userId || existingRes.data?.id || null;
-        } else {
-          throw regErr;
-        }
+      const response = await api.post("/users/admin/register", payload);
+      if (response.status === 200 || response.status === 201) {
+        const createdUser = response.data;
+        createdUserId = createdUser?.userId || createdUser?.id || null;
       }
 
       // Sync username & userId to Doctor or Staff table

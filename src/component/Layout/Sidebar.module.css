@@ -18,6 +18,18 @@
   user-select: none;
   font-family: inherit;
   overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    transform: translateX(-100%);
+    z-index: 50;
+  }
+
+  .sidebarOpen {
+    transform: translateX(0);
+  }
 }
 
 /* Header & Brand */

@@ -25,6 +25,9 @@ import RoleManagementPage from '../pages/RoleManagementPage';
 import DiagnosticsPage from '../pages/DiagnosticsPage';
 import SurgeryPage from '../pages/SurgeryPage';
 import FacilityManagementPage from '../pages/FacilityManagementPage';
+import PayrollManagementPage from '../pages/PayrollManagementPage';
+import BillingOperationsPage from '../pages/BillingOperationsPage';
+import ClinicalRecordsPage from '../pages/ClinicalRecordsPage';
 
 const AdminRouteWrapper = () => {
   const [searchParams] = useSearchParams();
@@ -59,6 +62,9 @@ const AdminRouteWrapper = () => {
       <Route path="master-console" element={<Navigate to="/admin/roles" replace />} />
       <Route path="roles" element={<RoleManagementPage />} />
       <Route path="hr" element={<HRManagementPage initialOperation={op} />} />
+      <Route path="payroll" element={<PayrollManagementPage defaultTab="payroll" />} />
+      <Route path="billing-ops" element={<BillingOperationsPage />} />
+      <Route path="clinical-records" element={<ClinicalRecordsPage />} />
       <Route path="*" element={<Navigate to="dashboard" replace />} />
     </Routes>
   );

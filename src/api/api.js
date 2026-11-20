@@ -1,4 +1,4 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 import CryptoJS from 'crypto-js';
 
 // Security Keys (Kept for potential individual field encryption)
@@ -6,8 +6,9 @@ const ENCRYPTION_KEY = process.env.REACT_APP_RAJA_ENCRYPTION_KEY || 'default_sec
 const SIGNING_KEY = process.env.REACT_APP_RAJA_SIGNING_KEY || 'default_secure_sign_key_32_chars';
 
 // --- API CONFIGURATION ---
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 const api = axios.create({
-    baseURL: '', 
+    baseURL: API_BASE_URL, 
 });
 
 // Production-ready Encryption Utilities
@@ -214,6 +215,11 @@ api.interceptors.response.use(
         // If refresh failed or request not eligible for refresh, logout
         if (!isAuthEndpoint && error.response && error.response.status === 401) {
             await logoutUser(true, 'expired');
+        } else {
+            const errMsg = error.response?.data?.message || error.response?.data?.error || error.message;
+            if (errMsg && typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('app:toast', { detail: { type: 'error', message: errMsg } }));
+            }
         }
 
         return Promise.reject(error);
